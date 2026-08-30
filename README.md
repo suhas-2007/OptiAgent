@@ -93,6 +93,26 @@ OptiAgent provides a web interface for defining optimization problems, running t
 
 ![OptiAgent Architecture](screenshots/architecture.png)
 
+## 📊 Benchmark Results
+
+OptiAgent was evaluated on several standard continuous optimization benchmark functions.
+
+| Benchmark | Strategy | Best Score | Best Position | Stages |
+|---|---|---:|---|---:|
+| Sphere | CMA-ES | 0 | [0, 0] | 1 |
+| Rosenbrock | PSO | 0 | [1, 1] | 2 |
+| Rastrigin | CMA-ES | 0 | [0, 0] | 1 |
+| Ackley | CMA-ES | 0 | [0, 0] | 1 |
+| Schwefel | PSO | 2.5455 × 10⁻⁵ | [420.9687, 420.9687] | 2 |
+
+### Observations
+
+- CMA-ES successfully solved Sphere, Rastrigin, and Ackley in a single stage.
+- PSO solved the Rosenbrock problem in two stages.
+- PSO reached a near-optimal solution for the Schwefel function.
+- Different optimization strategies were selected for different objective functions.
+- Solutions were independently validated by OptiAgent before being accepted.
+
 🧠 Agentic Optimization Workflow
 
 USER PROBLEM
