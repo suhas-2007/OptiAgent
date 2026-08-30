@@ -12,7 +12,7 @@ class AIPlanner:
     Gemini-powered strategic planner for OptiAgent.
 
     Primary:
-        Gemini Function Calling
+        Gemini Function Calling / AFC
 
     Fallback:
         Local intelligent strategy selection
@@ -26,8 +26,9 @@ class AIPlanner:
         - CMA-ES
         - Nelder-Mead
 
-    If Gemini quota/API is unavailable, OptiAgent
-    automatically switches to the local fallback.
+    If Gemini becomes unavailable or quota is exhausted,
+    the planner permanently switches to the local fallback
+    for the lifetime of this planner instance.
     """
 
     # ======================================================
@@ -42,7 +43,6 @@ class AIPlanner:
     ):
 
         if not algorithms:
-
             raise ValueError(
                 "AIPlanner requires at least one "
                 "optimization algorithm."
@@ -108,6 +108,10 @@ class AIPlanner:
         self.gemini_available = (
             self.client is not None
         )
+
+        # Once quota is exhausted, don't make
+        # unnecessary Gemini requests again.
+        self.gemini_quota_exhausted = False
 
     # ======================================================
     # GEMINI FUNCTION
@@ -259,10 +263,6 @@ class AIPlanner:
         validation,
         avoid_strategy=None,
     ):
-
-        # ==================================================
-        # BOUNDS
-        # ==================================================
 
         bounds_text = []
 
@@ -755,7 +755,6 @@ confidence
             == "stagnating"
         ):
 
-            # Prefer changing the search behaviour.
             candidates = [
 
                 "PSO",
@@ -785,10 +784,6 @@ confidence
 
             if candidate in available
         ]
-
-        # ==================================================
-        # SAFETY FALLBACK
-        # ==================================================
 
         if not filtered:
 
@@ -991,6 +986,13 @@ confidence
                 "Gemini client is unavailable."
             )
 
+        if self.gemini_quota_exhausted:
+
+            raise RuntimeError(
+                "Gemini API quota is already known "
+                "to be exhausted."
+            )
+
         print()
         print(
             ">>> Gemini agent is reasoning..."
@@ -1176,7 +1178,6 @@ confidence
                 )
 
                 print()
-
                 print(
                     ">>> Function call received"
                 )
@@ -1228,12 +1229,17 @@ confidence
                     in error_text.lower()
                 ):
 
+                    # IMPORTANT:
+                    # Never retry a known quota failure.
+                    self.gemini_quota_exhausted = True
+                    self.gemini_available = False
+
                     raise RuntimeError(
                         "Gemini API quota exhausted."
                     ) from exc
 
                 # ==========================================
-                # RETRY
+                # RETRY OTHER CLIENT ERRORS
                 # ==========================================
 
                 if attempt < max_attempts:
@@ -1291,9 +1297,9 @@ confidence
                         2 ** (
                             attempt - 1
                         )
-                    ) 
+                    )
 
-      # ==================================================
+            # ==================================================
             # NETWORK ERROR
             # ==================================================
 
@@ -1343,12 +1349,13 @@ confidence
 
         Gemini is tried first.
 
-        Local fallback is automatically used when
-        Gemini is unavailable or quota is exhausted.
+        Once Gemini quota is exhausted or the Gemini
+        service becomes unavailable, all subsequent
+        decisions use the local fallback.
         """
 
         # ==================================================
-        # RESET
+        # RESET LAST RECOMMENDATION
         # ==================================================
 
         self.last_recommendation = None
@@ -1391,14 +1398,17 @@ confidence
                 avoid_strategy
             ),
         )
-
-        # ==================================================
+      # ==================================================
         # TRY GEMINI
         # ==================================================
 
         recommendation = None
 
-        if self.gemini_available:
+        if (
+            self.gemini_available
+            and
+            not self.gemini_quota_exhausted
+        ):
 
             try:
 
@@ -1412,7 +1422,25 @@ confidence
                 )
 
             except Exception as exc:
+
                 self.gemini_available = False
+
+                error_text = str(
+                    exc
+                )
+
+                if (
+                    "429" in error_text
+                    or
+                    "RESOURCE_EXHAUSTED"
+                    in error_text
+                    or
+                    "quota"
+                    in error_text.lower()
+                ):
+
+                    self.gemini_quota_exhausted = True
+
                 print()
                 print(
                     ">>> Gemini unavailable."
@@ -1628,7 +1656,6 @@ confidence
         # ==================================================
 
         print()
-
         print(
             ">>> STRATEGIC DECISION"
         )
