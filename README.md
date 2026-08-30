@@ -89,6 +89,10 @@ OptiAgent provides a web interface for defining optimization problems, running t
 
 ![Strategy and Convergence](screenshots/Screenshot_2026-08-30_152717.png)
 
+## 🏗️ System Architecture
+
+![OptiAgent Architecture](screenshots/architecture.png)
+
 🧠 Agentic Optimization Workflow
 
 USER PROBLEM
