@@ -67,6 +67,28 @@ The goal is to make optimization strategy-aware and adaptive, rather than relyin
 
 ---
 
+# 🖥️ Demo
+
+OptiAgent provides a web interface for defining optimization problems, running the autonomous optimization agent, and viewing the resulting solution.
+
+## 📸 Screenshots
+
+### OptiAgent Interface
+
+![OptiAgent Interface](screenshots/Screenshot_2026-08-30_152654.png)
+
+### Optimization
+
+![Optimization](screenshots/Screenshot_2026-08-30_152703.png)
+
+### Optimization Results
+
+![Optimization Results](screenshots/Screenshot_2026-08-30_152712.png)
+
+### Strategy and Convergence
+
+![Strategy and Convergence](screenshots/Screenshot_2026-08-30_152717.png)
+
 🧠 Agentic Optimization Workflow
 
 USER PROBLEM
