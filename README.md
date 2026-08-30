@@ -8,9 +8,9 @@ Instead of requiring the user to manually choose an optimization algorithm, Opti
 
 ### 🚀 Live Demo
 
-**Frontend:** https://optiagent-frontend.onrender.com
+**Frontend:** https://optiagent-frontend-272474227005.asia-south1.run.app
 
-**Backend API:** https://optiagent-api.onrender.com
+**Backend API:** https://optiagent-272474227005.asia-south1.run.app
 
 ---
 
