@@ -1,46 +1,75 @@
-
 # OptiAgent
 
-## Autonomous Dynamic Optimization
+## Autonomous Agentic Optimization System
 
-OptiAgent is an **agentic optimization system** that automatically selects, executes, validates, monitors, and adapts numerical optimization strategies for user-defined mathematical objective functions.
+OptiAgent is an agentic optimization platform that automatically selects, executes, validates, monitors, and adapts numerical optimization strategies for user-defined mathematical objective functions.
 
-Instead of requiring the user to manually select an optimization algorithm, OptiAgent uses **Gemini AI with Automatic Function Calling (AFC)** to make strategic optimization decisions.
+Instead of requiring the user to manually choose an optimization algorithm, OptiAgent introduces an AI-driven decision layer that analyzes the optimization problem and selects an appropriate strategy.
 
----
+### 🚀 Live Demo
 
-# 🚀 Overview
+**Frontend:** https://optiagent-frontend.onrender.com
 
-Traditional optimization systems usually require the user to decide which algorithm to use.
-
-For example:
-
-- Genetic Algorithm
-- Particle Swarm Optimization
-- Differential Evolution
-- Simulated Annealing
-- Hill Climbing
-- CMA-ES
-- Nelder-Mead
-
-Choosing the right algorithm can depend on the characteristics of the optimization problem.
-
-OptiAgent addresses this by introducing an **AI-driven decision layer**.
-
-The user provides:
-
-1. Objective function
-2. Number of dimensions
-3. Bounds for each variable
-
-OptiAgent then autonomously determines an optimization strategy and executes the optimization process.
+**Backend API:** https://optiagent-api.onrender.com
 
 ---
 
-# 🧠 Agentic Optimization Workflow
+## 🎯 What Is OptiAgent?
+
+Traditional optimization systems usually follow this workflow:
 
 ```text
-                    USER PROBLEM
+User
+ ↓
+Choose Algorithm
+ ↓
+Run Optimization
+ ↓
+Get Result
+
+The problem is that choosing an appropriate optimization algorithm can depend on:
+
+Objective-function characteristics
+
+Search-space size
+
+Dimensionality
+
+Local minima
+
+Exploration requirements
+
+Convergence behavior
+
+
+OptiAgent changes this workflow by introducing an autonomous decision-making layer:
+
+User Problem
+     ↓
+Observe
+     ↓
+Reason
+     ↓
+Decide
+     ↓
+Optimize
+     ↓
+Validate
+     ↓
+Monitor
+     ↓
+Adapt
+     ↓
+Repeat
+
+The goal is to make optimization strategy-aware and adaptive, rather than relying on a single fixed optimizer.
+
+
+---
+
+🧠 Agentic Optimization Workflow
+
+USER PROBLEM
                          |
                          v
                 Function Parser
@@ -80,15 +109,12 @@ OptiAgent then autonomously determines an optimization strategy and executes the
                  Continue   Adaptation
                               |
                               v
-                         Gemini AFC
-                              |
-                              v
-                      New Strategy
+                       New Strategy
                               |
                               v
                        Next Stage
 
-The agent follows the cycle:
+The agent follows:
 
 Observe
    ↓
@@ -115,11 +141,17 @@ Dynamic mathematical objective functions
 
 Safe mathematical expression parsing
 
-Multiple optimization algorithms
+Dynamic optimization dimensions
 
-AI-based optimization strategy selection
+User-defined variable bounds
 
-Gemini Automatic Function Calling (AFC)
+Multiple numerical optimization algorithms
+
+AI-based strategy selection
+
+Gemini integration
+
+Gemini Automatic Function Calling
 
 Optimizer registry architecture
 
@@ -129,19 +161,23 @@ Convergence monitoring
 
 Stagnation detection
 
-Adaptive optimization strategy
+Adaptive optimizer parameters
 
 Multi-stage optimization
 
-REST API
+Global-best tracking
 
-Web frontend
-
-Optimization history
+Strategy history
 
 Convergence history
 
-Global best solution tracking
+REST API
+
+Web-based dashboard
+
+Gemini failure fallback mechanism
+
+Cloud deployment
 
 
 
@@ -149,19 +185,21 @@ Global best solution tracking
 
 🔬 Supported Optimization Algorithms
 
-OptiAgent currently supports:
+OptiAgent currently supports seven optimization strategies.
 
 1. Particle Swarm Optimization
 
-PSO is a population-based optimization technique inspired by swarm behavior.
+PSO is a population-based optimization method inspired by swarm intelligence.
+
+It is useful for continuous optimization and global exploration.
 
 2. Differential Evolution
 
-Differential Evolution is a population-based evolutionary optimization algorithm that is effective for continuous optimization.
+Differential Evolution is an evolutionary population-based method that performs well on continuous optimization problems.
 
 3. Genetic Algorithm
 
-Genetic Algorithm uses evolutionary concepts such as:
+The Genetic Algorithm uses evolutionary mechanisms such as:
 
 Selection
 
@@ -170,61 +208,293 @@ Crossover
 Mutation
 
 
+to search for good solutions.
+
 4. Simulated Annealing
 
-Simulated Annealing uses probabilistic exploration to escape local minima.
+Simulated Annealing uses probabilistic exploration and can accept worse solutions temporarily to escape local minima.
 
 5. Hill Climbing
 
-Hill Climbing iteratively searches for better neighboring solutions.
+Hill Climbing performs local search by repeatedly moving toward better neighboring solutions.
 
 6. CMA-ES
 
-Covariance Matrix Adaptation Evolution Strategy is designed for difficult continuous optimization problems.
+Covariance Matrix Adaptation Evolution Strategy is designed for difficult continuous optimization problems and adapts the search distribution during optimization.
 
 7. Nelder-Mead
 
-Nelder-Mead is a derivative-free optimization method based on a simplex.
+Nelder-Mead is a derivative-free optimization algorithm based on a simplex.
 
 
 ---
 
-🎯 Example Optimization Problem
+🤖 AI Strategic Decision Making
 
-Example objective function:
+The AI planner acts as the strategic layer of OptiAgent.
 
-x1**2 + x2**2
+The planner can consider information such as:
 
-Dimensions:
+Objective function
 
-2
+Number of dimensions
 
-Bounds:
+Variable bounds
 
-x1 ∈ [-10, 10]
-x2 ∈ [-10, 10]
+Available algorithms
 
-The theoretical optimum is:
+Current strategy
 
-x1 = 0
-x2 = 0
+Optimization status
 
-with:
+Current best score
 
-f(x1, x2) = 0
+Validation information
 
-OptiAgent should therefore search for a solution close to:
+Convergence behavior
 
-[0, 0]
+Stagnation
+
+
+The planner then recommends an optimization strategy.
+
+The selected strategy is passed to the optimizer registry.
+
+Optimization Problem
+        |
+        v
+    AI Planner
+        |
+        v
+ Strategy Decision
+        |
+        v
+ Optimizer Registry
+        |
+        v
+ Numerical Optimizer
+
+
+---
+
+🔧 Gemini Automatic Function Calling
+
+OptiAgent uses Gemini Automatic Function Calling (AFC) as part of its strategy-selection layer.
+
+Conceptually:
+
+Gemini
+   |
+   | Automatic Function Calling
+   v
+select_optimizer()
+   |
+   v
+Optimizer Registry
+   |
+   v
+Selected Algorithm
+
+This allows the AI planning layer to interact with the optimization system through a structured tool interface rather than relying only on unstructured text responses.
+
+
+---
+
+🛡️ AI Failure Resilience
+
+OptiAgent does not depend completely on the availability of the external AI service.
+
+If Gemini becomes temporarily unavailable because of:
+
+API quota limits
+
+Rate limits
+
+Service errors
+
+Temporary connectivity problems
+
+
+OptiAgent can switch to a local fallback strategy-selection mechanism.
+
+Gemini AI
+                 |
+          API available?
+            /       \
+          YES       NO
+           |         |
+           v         v
+      AI Strategy   Local
+       Selection   Fallback
+           |         |
+           +----+----+
+                |
+                v
+        Selected Optimizer
+
+For example, when Gemini is unavailable, the local decision layer can select a suitable global optimizer based on characteristics of the objective function and previous optimization behavior.
+
+This allows numerical optimization to continue instead of completely failing because of an external AI dependency.
+
+
+---
+
+🔄 Adaptive Optimization
+
+OptiAgent does not necessarily use the same optimizer throughout the entire optimization process.
+
+After each optimization stage, the system evaluates:
+
+Stage performance
+
+Global-best improvement
+
+Convergence trend
+
+Stagnation
+
+Solution validity
+
+Solution reliability
+
+
+If progress is satisfactory, the current strategy can continue.
+
+If stagnation is detected, the system performs adaptation.
+
+Optimization Stage
+        |
+        v
+Monitor Progress
+        |
+        v
+Stagnation?
+   /          \
+ No            Yes
+ |              |
+ v              v
+Continue    Adapt Parameters
+                |
+                v
+         Select New Strategy
+                |
+                v
+          Next Stage
+
+
+---
+
+🧩 Optimizer-Specific Adaptation
+
+The Adaptation Engine can modify optimizer behavior when progress stalls.
+
+Examples include:
+
+PSO
+
+Increase exploration through parameters such as inertia and social influence.
+
+Differential Evolution
+
+Refresh part of the population to increase population diversity.
+
+Genetic Algorithm
+
+Increase mutation rate to restore population diversity.
+
+Simulated Annealing
+
+Increase neighborhood exploration.
+
+CMA-ES
+
+Increase search step size.
+
+Hill Climbing
+
+Use additional restarts to escape local minima.
+
+Nelder-Mead
+
+Allow simplex restart behavior to explore a different region.
+
+
+---
+
+✅ Independent Solution Validation
+
+Optimization results are independently validated before being accepted.
+
+The validator checks:
+
+Solution structure
+
+Number of dimensions
+
+Variable bounds
+
+Objective score
+
+Actual objective-function evaluation
+
+Solution reliability
+
+
+The reported optimizer score is not blindly trusted.
+
+The objective function is independently evaluated at the returned solution.
+
+Optimizer Result
+       |
+       v
+Solution Validator
+       |
+       +----> Bounds Check
+       |
+       +----> Dimension Check
+       |
+       +----> Objective Re-evaluation
+       |
+       +----> Reliability Check
+       |
+       v
+Validated Result
+
+
+---
+
+📈 Convergence Monitoring
+
+OptiAgent records optimization progress throughout execution.
+
+Convergence information can include:
+
+Stage
+Algorithm
+Iteration
+Score
+
+The monitoring system analyzes the optimization history to identify whether the optimizer is:
+
+Improving
+
+Converging
+
+Flat
+
+Stagnating
+
+
+This information is then used by the adaptation layer.
 
 
 ---
 
 🧮 Mathematical Expression Support
 
-OptiAgent provides a restricted mathematical expression parser.
+OptiAgent accepts user-defined mathematical expressions.
 
-Example:
+Examples:
 
 x1**2 + x2**2
 
@@ -233,6 +503,8 @@ x1**2 + x2**2
 sin(x1)**2 + cos(x2)**2
 
 sqrt(x1**2 + x2**2)
+
+418.9829*2 - (x1*sin(sqrt(abs(x1))) + x2*sin(sqrt(abs(x2))))
 
 Supported mathematical functions include:
 
@@ -244,7 +516,7 @@ sqrt()
 log()
 abs()
 
-Supported constants:
+Supported constants include:
 
 pi
 e
@@ -263,7 +535,7 @@ x3
 
 OptiAgent does not directly execute arbitrary Python code supplied by the user.
 
-Instead, mathematical expressions are parsed using Python's Abstract Syntax Tree (AST) system.
+The mathematical expression is parsed using Python's Abstract Syntax Tree (AST) system.
 
 Only approved:
 
@@ -276,133 +548,9 @@ Operators
 Mathematical functions
 
 
-are allowed.
+are permitted.
 
-This prevents arbitrary Python expressions from being executed through the objective-function input.
-
-
----
-
-🤖 AI Strategic Decision Making
-
-The AI planner acts as the strategic layer of OptiAgent.
-
-Gemini receives information about:
-
-Objective function
-
-Number of dimensions
-
-Variable bounds
-
-Available optimization algorithms
-
-Current optimization strategy
-
-Optimization status
-
-Validation information
-
-Convergence behavior
-
-
-Gemini then recommends an optimization strategy.
-
-The selected strategy is passed to the optimizer registry.
-
-
----
-
-🔧 Automatic Function Calling
-
-OptiAgent uses Gemini Automatic Function Calling (AFC) to allow the AI planner to select an optimization algorithm through a defined tool interface.
-
-Conceptually:
-
-Gemini
-   |
-   | AFC
-   v
-select_optimizer()
-   |
-   v
-Optimizer Registry
-   |
-   v
-Selected Algorithm
-
-This creates an agentic decision-making layer instead of simply asking an AI model to return plain text.
-
-
----
-
-🔄 Adaptive Optimization
-
-OptiAgent does not necessarily use a single optimizer for the entire problem.
-
-The system monitors optimization progress.
-
-If the optimization continues to improve:
-
-Continue Current Strategy
-
-If stagnation is detected:
-
-Stagnation
-    ↓
-Adaptation Engine
-    ↓
-Gemini AFC
-    ↓
-New Strategy
-    ↓
-Next Optimization Stage
-
-This allows OptiAgent to dynamically change strategies during optimization.
-
-
----
-
-✅ Solution Validation
-
-The optimization result is independently validated before being accepted.
-
-The validator checks factors such as:
-
-Solution structure
-
-Number of dimensions
-
-Variable bounds
-
-Objective score
-
-Actual objective-function evaluation
-
-Solution reliability
-
-
-The reported optimizer score is not blindly trusted.
-
-The objective function is independently evaluated at the returned position.
-
-
----
-
-📈 Convergence Monitoring
-
-OptiAgent records optimization progress during execution.
-
-For every optimization stage, convergence information can include:
-
-Stage
-Algorithm
-Iteration
-Score
-
-This information can be used to understand how the optimization progressed.
-
-The monitoring system also attempts to detect stagnation.
+This provides a restricted mathematical execution environment instead of unrestricted Python eval() execution.
 
 
 ---
@@ -411,7 +559,7 @@ The monitoring system also attempts to detect stagnation.
 
 +-----------------------+
 |       Frontend        |
-|      Web Interface    |
+|      Web Dashboard    |
 +-----------+-----------+
             |
             v
@@ -425,29 +573,31 @@ The monitoring system also attempts to detect stagnation.
 |  Optimization Agent  |
 +-----------+-----------+
             |
-     +------+------+
-     |             |
-     v             v
+      +-----+-----+
+      |           |
+      v           v
  AI Planner    Optimizer
-     |             |
-     v             v
+      |           |
+      v           v
  Gemini AFC    Registry
-                   |
-          +--------+--------+
-          |        |        |
-          v        v        v
-        PSO       DE       GA
-          |
-          +----------------+
-                   |
-                   v
-            Solution Validator
-                   |
-                   v
-            Convergence Monitor
-                   |
-                   v
-            Adaptation Engine
+                  |
+        +---------+---------+
+        |    |    |    |    |
+        v    v    v    v    v
+       PSO   DE   GA   SA   CMA-ES
+        |
+        +---- Hill Climbing
+        |
+        +---- Nelder-Mead
+                  |
+                  v
+          Solution Validator
+                  |
+                  v
+          Convergence Monitor
+                  |
+                  v
+          Adaptation Engine
 
 
 ---
@@ -457,7 +607,6 @@ The monitoring system also attempts to detect stagnation.
 OptiAgent/
 │
 ├── backend/
-│   │
 │   ├── adaptation.py
 │   ├── agent.py
 │   ├── ai_planner.py
@@ -479,15 +628,12 @@ OptiAgent/
 │   └── solution_validator.py
 │
 ├── data/
-│
 ├── frontend/
-│
 ├── models/
-│
 ├── tests/
 │
-├── .env
 ├── .gitignore
+├── LICENSE
 ├── README.md
 └── requirements.txt
 
@@ -496,11 +642,9 @@ OptiAgent/
 
 ⚙️ Requirements
 
-The project requires:
+OptiAgent requires:
 
 Python 3.10+
-
-Gemini API access
 
 Flask
 
@@ -514,8 +658,10 @@ SciPy
 
 python-dotenv
 
+Gunicorn
 
-Install dependencies using:
+
+Install dependencies:
 
 pip install -r requirements.txt
 
@@ -524,17 +670,17 @@ pip install -r requirements.txt
 
 🔑 Environment Configuration
 
-Create a .env file in the project root.
+Create a .env file for local development:
 
 GEMINI_API_KEY=your_api_key_here
 
-The API key should remain on the backend.
+The API key must remain on the backend.
 
-Do not expose the Gemini API key in frontend JavaScript.
+Never place the Gemini API key in frontend JavaScript.
 
-Do not commit .env to GitHub.
+Never commit .env to GitHub.
 
-The .gitignore file should contain:
+The repository .gitignore should exclude:
 
 .env
 .venv/
@@ -544,64 +690,46 @@ __pycache__/
 
 ---
 
-🚀 Running the Backend
+🚀 Running Locally
+
+Start the Backend
 
 From the project root:
 
 .\.venv\Scripts\python.exe backend\api.py
 
-The Flask API should start at:
+The Flask API runs locally at:
 
 http://127.0.0.1:5000
-
-Expected output:
-
-============================================================
-                 OPTIAGENT API
-============================================================
-
-Server: http://127.0.0.1:5000
 
 
 ---
 
 ❤️ Health Check
 
-After starting the API, open another PowerShell terminal.
-
 Run:
 
 Invoke-RestMethod http://127.0.0.1:5000/health
 
-Expected response:
+Expected:
 
 status
 ------
 ok
 
-This confirms that the API is running.
-
 
 ---
 
-🌐 Running the Frontend
-
-Open another terminal.
+🌐 Start the Frontend
 
 From the project root:
 
 cd frontend
 python -m http.server 5500
 
-Then open:
+Open:
 
 http://127.0.0.1:5500
-
-The frontend should display the API connection status.
-
-For example:
-
-API Online
 
 
 ---
@@ -623,7 +751,7 @@ Optimization Endpoint
 
 POST /optimize
 
-Example JSON request:
+Example request:
 
 {
   "objective": "x1**2 + x2**2",
@@ -639,63 +767,24 @@ Example JSON request:
 
 ---
 
-🧪 Testing the API
-
-PowerShell example:
-
-$body = @{
-    objective = "x1**2 + x2**2"
-    dimensions = 2
-    bounds = @(
-        ,@(-10,10)
-        ,@(-10,10)
-    )
-    max_stages = 1
-    patience = 3
-} | ConvertTo-Json -Depth 10
-
-Invoke-WebRequest `
-    -Uri "http://127.0.0.1:5000/optimize" `
-    -Method POST `
-    -ContentType "application/json" `
-    -Body $body
-
-
----
-
-🧪 Automated Tests
-
-The project is designed to support automated testing for:
-
-Mathematical expression parsing
-
-Optimization algorithms
-
-Solution validation
-
-API behavior
-
-Agent components
-
-
-Tests can be executed with:
-
-pytest
-
-
----
-
 📊 Optimization Result
 
-A successful optimization returns information such as:
+A successful optimization returns information including:
 
-Best Position
-Best Score
-Strategy History
-Stage History
-Convergence History
+Best position
 
-Example conceptual result:
+Best score
+
+Strategy history
+
+Stage history
+
+Convergence history
+
+AI recommendation
+
+
+Example:
 
 {
   "best_position": [0.001, -0.002],
@@ -708,83 +797,69 @@ Example conceptual result:
 
 ---
 
-🔁 Multi-Stage Optimization
+🎯 Example Optimization Problem
 
-OptiAgent supports multiple optimization stages.
+Consider:
 
-Example:
+f(x1, x2) = x1**2 + x2**2
 
-Stage 1 → Differential Evolution
-              ↓
-        Stagnation detected
-              ↓
-Stage 2 → CMA-ES
-              ↓
-        Improvement
-              ↓
-Stage 3 → CMA-ES
-              ↓
-        Convergence
+Dimensions:
 
-The actual strategy depends on the AI planner's decision and the observed optimization behavior.
+2
+
+Bounds:
+
+x1 ∈ [-10, 10]
+x2 ∈ [-10, 10]
+
+The theoretical global optimum is:
+
+x1 = 0
+x2 = 0
+
+with:
+
+f(x1, x2) = 0
+
+OptiAgent should therefore search for a solution close to:
+
+[0, 0]
 
 
 ---
 
-🎯 Why OptiAgent Is Different
+🔁 Multi-Stage Optimization
 
-Traditional optimization software:
+OptiAgent can execute multiple optimization stages.
 
-User
- ↓
-Choose Algorithm
- ↓
-Run Algorithm
- ↓
-Result
+For example:
 
-OptiAgent:
+Stage 1
+   ↓
+Differential Evolution
+   ↓
+Stagnation detected
+   ↓
+Stage 2
+   ↓
+PSO
+   ↓
+Improvement
+   ↓
+Stage 3
+   ↓
+PSO
 
-User
- ↓
-Problem
- ↓
-AI reasons about strategy
- ↓
-Algorithm selected
- ↓
-Optimization
- ↓
-Independent validation
- ↓
-Monitoring
- ↓
-Adaptation
- ↓
-Potential strategy change
- ↓
-Final solution
-
-The key idea is that the system is not simply an optimizer.
-
-It is an agentic optimization framework that combines:
-
-AI Reasoning
-+
-Numerical Optimization
-+
-Validation
-+
-Monitoring
-+
-Adaptation
+The actual strategy sequence depends on the AI planner, optimization behavior, and fallback logic.
 
 
 ---
 
 🌍 Potential Real-World Applications
 
-The architecture can be extended to real-world optimization problems such as:
+The current architecture focuses on continuous numerical optimization.
+
+The same agentic architecture can be extended to real-world optimization problems.
 
 Smart Logistics
 
@@ -798,7 +873,7 @@ Travel distance
 
 Delivery time
 
-Fuel usage
+Fuel consumption
 
 
 Resource Allocation
@@ -858,25 +933,25 @@ Capacity allocation
 
 🔒 Security Considerations
 
-The objective-function parser uses restricted AST evaluation instead of Python's unrestricted eval().
+The objective-function parser uses restricted AST evaluation instead of unrestricted Python execution.
 
 The Gemini API key is stored server-side through environment variables.
 
-For production deployment, additional security should be added, including:
+For production systems, additional security controls should be considered:
 
 Authentication
 
 Rate limiting
 
-Request validation
-
 HTTPS
+
+Request validation
 
 Secure secret management
 
-Production WSGI server
+Logging
 
-Logging and monitoring
+Monitoring
 
 
 
@@ -884,67 +959,92 @@ Logging and monitoring
 
 ☁️ Deployment
 
-The current development configuration uses:
+OptiAgent is currently deployed using Render.
 
-Frontend:
-http://127.0.0.1:5500
+Frontend
 
-Backend:
-http://127.0.0.1:5000
+The web dashboard is deployed as a Render Static Site.
 
-These addresses are local to the development machine.
+Backend
 
-For public deployment, the frontend and backend should be hosted on publicly accessible infrastructure.
+The Flask REST API is deployed as a Render Web Service using Gunicorn.
 
-A production architecture can look like:
+Architecture:
 
 Internet
-                    |
-                    v
-             Public Frontend
-                    |
-                    v
-             Production API
-                    |
-          +---------+---------+
-          |                   |
-          v                   v
-    OptiAgent Agent      Gemini API
-          |
-          v
-    Optimization Engine
+    |
+    v
+Public Frontend
+    |
+    v
+Flask REST API
+    |
+    +----------> Gemini API
+    |
+    v
+Optimization Agent
+    |
+    +--> Optimizer Registry
+    |
+    +--> Numerical Optimizers
+    |
+    +--> Solution Validator
+    |
+    +--> Convergence Monitor
+    |
+    +--> Adaptation Engine
 
-The Gemini API key must remain on the backend and should never be placed in the public frontend.
+The Gemini API key remains server-side and is never exposed to the public frontend.
 
 
 ---
 
 ⚠️ Gemini API Availability
 
-OptiAgent uses Gemini as an external AI planning service.
+Gemini is an external dependency of the strategic planning layer.
 
-Gemini API availability can depend on:
-
-Model availability
+Availability can depend on:
 
 API quota
 
 Rate limits
 
+Model availability
+
 Project configuration
 
-Service load
+Service availability
 
 
-Temporary errors such as:
+Possible external errors include:
 
 429 RESOURCE_EXHAUSTED
 503 UNAVAILABLE
 504 DEADLINE_EXCEEDED
 
-may occur.
+OptiAgent includes a local fallback mechanism so that temporary Gemini failures do not necessarily stop numerical optimization.
 
-These are external service conditions and are separate from the numerical optimization algorithms themselves.
+
+---
+
+🧪 Testing
+
+The project supports testing of components such as:
+
+Mathematical expression parsing
+
+Optimization algorithms
+
+Solution validation
+
+API behavior
+
+Agent components
+
+
+Run:
+
+pytest
 
 
 ---
@@ -973,6 +1073,8 @@ Completed
 
 [x] Gemini Automatic Function Calling
 
+[x] Gemini fallback mechanism
+
 [x] Solution validation
 
 [x] Convergence monitoring
@@ -987,26 +1089,30 @@ Completed
 
 [x] Frontend API connection
 
-[x] Basic optimization UI
+[x] Optimization dashboard
+
+[x] GitHub repository
+
+[x] Cloud deployment
 
 
-Remaining / Improvements
+Improvements
 
-[ ] Automated test suite
-
-[ ] Production deployment
+[ ] Expanded automated test coverage
 
 [ ] Benchmark dataset
 
-[ ] Expanded documentation
-
 [ ] Performance benchmarking
 
-[ ] Production security
+[ ] Production authentication
+
+[ ] API rate limiting
 
 [ ] Advanced visualization
 
 [ ] Real-world logistics optimization
+
+[ ] Experiment database
 
 
 
@@ -1014,7 +1120,7 @@ Remaining / Improvements
 
 🚧 Limitations
 
-The current system is primarily designed for continuous numerical optimization.
+The current system primarily targets continuous numerical optimization.
 
 Some real-world optimization problems require additional capabilities such as:
 
@@ -1033,7 +1139,7 @@ Large-scale datasets
 Real-time external data
 
 
-These can be added in future versions.
+These capabilities can be added in future versions.
 
 
 ---
@@ -1077,8 +1183,6 @@ Resource allocation
 
 Phase 4 — Production
 
-Cloud deployment
-
 Authentication
 
 Database
@@ -1089,13 +1193,15 @@ API rate limiting
 
 Production monitoring
 
+Advanced observability
+
 
 
 ---
 
-👨‍💻 Development Philosophy
+🧠 Development Philosophy
 
-OptiAgent separates responsibilities into independent components.
+OptiAgent separates strategic reasoning from numerical computation.
 
 AI Planner
     ↓
@@ -1127,36 +1233,94 @@ Debug
 
 Deploy
 
+Maintain
+
 Replace individual components
 
 
 
 ---
 
-📜 License
+🏆 Why OptiAgent?
 
-This project is intended for educational, research, experimentation, and demonstration purposes.
+Most optimization software focuses on executing an optimization algorithm.
 
-A production deployment should include an appropriate open-source or proprietary license depending on the intended use.
+OptiAgent focuses on the decision process surrounding optimization.
+
+Traditional Optimization
+
+Problem
+  ↓
+Fixed Algorithm
+  ↓
+Result
+
+OptiAgent
+
+Problem
+  ↓
+AI Strategy Selection
+  ↓
+Numerical Optimization
+  ↓
+Independent Validation
+  ↓
+Convergence Monitoring
+  ↓
+Stagnation Detection
+  ↓
+Adaptation
+  ↓
+Potential Strategy Change
+  ↓
+Final Solution
+
+The core idea is:
+
+AI Reasoning
+      +
+Numerical Optimization
+      +
+Independent Validation
+      +
+Monitoring
+      +
+Adaptation
+      =
+OptiAgent
 
 
 ---
 
-⭐ Project Summary
+📜 License
 
-OptiAgent — Autonomous Dynamic Optimization
+OptiAgent is released under the license included in this repository.
 
-An agentic optimization framework where AI selects optimization strategies, numerical algorithms solve the mathematical problem, independent validation verifies the result, and monitoring plus adaptation allow the system to change strategy when optimization stagnates.
+See the LICENSE file for the complete license terms.
 
-AI
+
+---
+
+👨‍💻 Project Summary
+
+OptiAgent — Autonomous Agentic Optimization System
+
+An agentic optimization framework where AI selects optimization strategies, numerical algorithms solve mathematical problems, independent validation verifies results, and monitoring plus adaptation allow the system to respond when optimization stagnates.
+
+The project combines:
+
+Agentic AI
 +
-Optimization
+Numerical Optimization
++
+Function Parsing
 +
 Validation
 +
 Monitoring
 +
-Adaptation
-=
-OptiAgent
+Adaptive Decision Making
++
+Cloud Deployment
 
+into a single optimization platform.
