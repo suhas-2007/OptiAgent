@@ -6,7 +6,7 @@
 // CONFIGURATION
 // ======================================================
 
-const API_URL = "https://optiagent-api.onrender.com";
+const API_URL = "https://optiagent-272474227005.asia-south1.run.app";
 
 
 // ======================================================
