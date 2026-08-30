@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>OptiAgent — Autonomous Optimization</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- =========================================================
+     TOP BAR
+========================================================= -->
+
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                OA
+            </div>
+
+            <div>
+                <h1>OptiAgent</h1>
+
+                <p>
+                    Autonomous Dynamic Optimization
+                </p>
+            </div>
+
+        </div>
+
+        <div id="connectionStatus" class="connection offline">
+            ● API Offline
+        </div>
+
+    </header>
+
+
+    <!-- =========================================================
+     MAIN
+========================================================= -->
+
+    <main class="container">
+
+
+        <!-- =====================================================
+         HERO
+    ====================================================== -->
+
+        <section class="hero">
+
+            <div class="eyebrow">
+                AGENTIC AI OPTIMIZATION
+            </div>
+
+            <h2>
+                Let the agent choose
+                <span>how to optimize.</span>
+            </h2>
+
+            <p>
+                OptiAgent analyzes your objective, selects an
+                optimization strategy, executes it, validates
+                the result, monitors convergence, and adapts
+                when necessary.
+            </p>
+
+        </section>
+
+
+        <!-- =====================================================
+         PIPELINE
+    ====================================================== -->
+
+        <section class="pipeline-card">
+
+            <div class="label">
+                AGENT LOOP
+            </div>
+
+            <h3>
+                Autonomous Decision Pipeline
+            </h3>
+
+            <div class="pipeline">
+
+                <div id="pipelineObserve" class="pipeline-step active">
+                    <span>01</span>
+                    <strong>Observe</strong>
+                </div>
+
+                <div class="arrow">→</div>
+
+                <div id="pipelineReason" class="pipeline-step">
+                    <span>02</span>
+                    <strong>Reason</strong>
+                </div>
+
+                <div class="arrow">→</div>
+
+                <div id="pipelineDecide" class="pipeline-step">
+                    <span>03</span>
+                    <strong>Decide</strong>
+                </div>
+
+                <div class="arrow">→</div>
+
+                <div id="pipelineAct" class="pipeline-step">
+                    <span>04</span>
+                    <strong>Act</strong>
+                </div>
+
+                <div class="arrow">→</div>
+
+                <div id="pipelineValidate" class="pipeline-step">
+                    <span>05</span>
+                    <strong>Validate</strong>
+                </div>
+
+                <div class="arrow">→</div>
+
+                <div id="pipelineAdapt" class="pipeline-step">
+                    <span>06</span>
+                    <strong>Adapt</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+         DASHBOARD
+    ====================================================== -->
+
+        <div class="dashboard-grid">
+
+
+            <!-- =================================================
+             LEFT — OPTIMIZATION SETUP
+        ================================================== -->
+
+            <section class="card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <div class="label">
+                            PROBLEM
+                        </div>
+
+                        <h3>
+                            Optimization Setup
+                        </h3>
+
+                    </div>
+
+                </div>
+
+
+                <!-- OBJECTIVE -->
+
+                <label for="objective">
+                    Objective Function
+                </label>
+
+                <input id="objective" type="text" value="x1**2 + x2**2" autocomplete="off">
+
+
+                <div class="examples">
+
+                    <button type="button" onclick="setExample('sphere')">
+                        Quadratic
+                    </button>
+
+                    <button type="button" onclick="setExample('shifted')">
+                        Shifted
+                    </button>
+
+                    <button type="button" onclick="setExample('trigonometric')">
+                        Trigonometric
+                    </button>
+
+                    <button type="button" onclick="setExample('rosenbrock')">
+                        Rosenbrock
+                    </button>
+
+                    <button type="button" onclick="setExample('rastrigin')">
+                        Rastrigin
+                    </button>
+
+                    <button type="button" onclick="setExample('ackley')">
+                        Ackley
+                    </button>
+
+                </div>
+
+
+                <!-- DIMENSIONS -->
+
+                <label for="dimensions">
+                    Number of Dimensions
+                </label>
+
+                <input id="dimensions" type="number" value="2" min="1" max="20">
+
+
+                <!-- STAGES / PATIENCE -->
+
+                <div class="metrics">
+
+                    <div>
+
+                        <label for="maxStages">
+                            Maximum Stages
+                        </label>
+
+                        <input id="maxStages" type="number" value="5" min="1" max="20">
+
+                    </div>
+
+                    <div>
+
+                        <label for="patience">
+                            Patience
+                        </label>
+
+                        <input id="patience" type="number" value="3" min="1" max="20">
+
+                    </div>
+
+                </div>
+
+
+                <!-- BOUNDS -->
+
+                <label>
+                    Variable Bounds
+                </label>
+
+                <div id="boundsContainer" class="bounds-container">
+
+                    <div class="bound-row">
+
+                        <div class="bound-label">
+                            x1
+                        </div>
+
+                        <input id="lowerBound1" type="number" value="-10">
+
+                        <input id="upperBound1" type="number" value="10">
+
+                    </div>
+
+
+                    <div class="bound-row">
+
+                        <div class="bound-label">
+                            x2
+                        </div>
+
+                        <input id="lowerBound2" type="number" value="-10">
+
+                        <input id="upperBound2" type="number" value="10">
+
+                    </div>
+
+                </div>
+
+
+                <!-- RUN -->
+
+                <button id="optimizeButton" class="primary-button" type="button">
+
+                    <span id="buttonText">
+                        Run OptiAgent
+                    </span>
+
+                    <span id="buttonLoader" class="loader hidden"></span>
+
+                </button>
+
+            </section>
+
+
+
+            <!-- =================================================
+             RIGHT — AI BRAIN
+        ================================================== -->
+
+            <section class="card ai-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <div class="label">
+                            AI BRAIN
+                        </div>
+
+                        <h3>
+                            Strategy Decision
+                        </h3>
+
+                    </div>
+
+                    <span id="agentBadge" class="badge">
+                        IDLE
+                    </span>
+
+                </div>
+
+
+                <!-- SELECTED STRATEGY -->
+
+                <div class="strategy-box">
+
+                    <span>
+                        SELECTED STRATEGY
+                    </span>
+
+                    <strong id="strategy">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <!-- CONFIDENCE / EXPLORATION -->
+
+                <div class="metrics">
+
+                    <div class="metric">
+
+                        <span>
+                            Confidence
+                        </span>
+
+                        <strong id="confidence">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="metric">
+
+                        <span>
+                            Exploration
+                        </span>
+
+                        <strong id="exploration">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- REASON -->
+
+                <div class="reason-box">
+
+                    <span>
+                        AI REASONING
+                    </span>
+
+                    <p id="reason">
+                        The agent will analyze your problem
+                        and provide a strategy recommendation
+                        with reasoning.
+                    </p>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- =====================================================
+         ERROR
+    ====================================================== -->
+
+        <div id="errorMessage" class="reason-box hidden" style="margin-top:22px;">
+
+            <strong>
+                Optimization could not be completed
+            </strong>
+
+            <p id="errorText"></p>
+
+        </div>
+
+
+        <!-- =====================================================
+         LIVE AGENT ACTIVITY
+    ====================================================== -->
+
+        <section id="activitySection" class="card" style="margin-top:22px;">
+
+            <div class="card-header">
+
+                <div>
+
+                    <div class="label">
+                        LIVE AGENT
+                    </div>
+
+                    <h3>
+                        Agent Activity
+                    </h3>
+
+                </div>
+
+                <span id="activityStatus" class="small-status">
+                    Waiting
+                </span>
+
+            </div>
+
+
+            <div id="activityList" class="history-list">
+
+                <div class="empty-state">
+                    Run OptiAgent to see agent activity.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+         RESULT
+    ====================================================== -->
+
+        <section class="card" style="margin-top:22px;">
+
+            <div class="card-header">
+
+                <div>
+
+                    <div class="label">
+                        RESULT
+                    </div>
+
+                    <h3>
+                        Best Solution
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="result-grid">
+
+                <div class="result-item">
+
+                    <span>
+                        Best Score
+                    </span>
+
+                    <strong id="bestScore">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="result-item">
+
+                    <span>
+                        Best Position
+                    </span>
+
+                    <strong id="bestPosition">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="result-item">
+
+                    <span>
+                        Stages
+                    </span>
+
+                    <strong id="stageCount">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="result-item">
+
+                    <span>
+                        Strategies
+                    </span>
+
+                    <strong id="strategyCount">
+                        —
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+         STRATEGY HISTORY
+    ====================================================== -->
+
+        <section class="card" style="margin-top:22px;">
+
+            <div class="card-header">
+
+                <div>
+
+                    <div class="label">
+                        ADAPTATION
+                    </div>
+
+                    <h3>
+                        Strategy History
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div id="strategyHistory" class="history-list">
+
+                <div class="empty-state">
+                    No optimization runs yet.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+         CONVERGENCE
+    ====================================================== -->
+
+        <section class="card convergence-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <div class="label">
+                        PERFORMANCE
+                    </div>
+
+                    <h3>
+                        Convergence
+                    </h3>
+
+                </div>
+
+                <span id="convergenceStatus" class="small-status">
+                    No data yet
+                </span>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas id="convergenceChart"></canvas>
+
+                <div id="chartEmpty" class="chart-empty">
+
+                    <div>
+                        <strong>
+                            No data yet.
+                        </strong>
+
+                        <br>
+
+                        Run optimization to see
+                        convergence.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================================
+     FOOTER
+========================================================= -->
+
+    <footer>
+
+        <div>
+            <strong>
+                OptiAgent v1.0
+            </strong>
+
+            <br>
+
+            Autonomous Dynamic Optimization
+        </div>
+
+        <div>
+            Built for intelligent optimization
+            <br>
+            Hackathon Project
+        </div>
+
+    </footer>
+
+
+    <!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
