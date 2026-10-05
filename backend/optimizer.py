@@ -40,15 +40,11 @@ class ParticleSwarmOptimizer:
         self.lower_bounds = self.bounds[:, 0]
         self.upper_bounds = self.bounds[:, 1]
 
-        # ==================================================
-        # OPTIONAL GLOBAL-BEST SEED
-        # ==================================================
+        # optional global-best seed
 
         self.initial_position = None
 
-        # ==================================================
-        # INITIAL PARTICLE POSITIONS
-        # ==================================================
+        # initial particle positions
 
         self.positions = self.rng.uniform(
             self.lower_bounds,
@@ -56,17 +52,13 @@ class ParticleSwarmOptimizer:
             size=(num_particles, dimensions),
         )
 
-        # ==================================================
-        # INITIAL VELOCITIES
-        # ==================================================
+        # initial velocities
 
         self.velocities = np.zeros(
             (num_particles, dimensions)
         )
 
-        # ==================================================
-        # PERSONAL BEST
-        # ==================================================
+        # personal best
 
         self.personal_best_positions = (
             self.positions.copy()
@@ -77,9 +69,7 @@ class ParticleSwarmOptimizer:
             for position in self.positions
         ])
 
-        # ==================================================
-        # GLOBAL BEST
-        # ==================================================
+        # global best
 
         best_index = np.argmin(
             self.personal_best_scores
@@ -97,35 +87,27 @@ class ParticleSwarmOptimizer:
             ]
         )
 
-        # ==================================================
-        # HISTORY
-        # ==================================================
+        # history
 
         self.history = [
             float(self.global_best_score)
         ]
 
-    # ======================================================
-    # APPLY GLOBAL-BEST SEED
-    # ======================================================
+    # apply global-best seed
 
     def _apply_initial_position(self):
 
         if self.initial_position is None:
             return
 
-        # --------------------------------------------------
-        # Make sure the seed is a NumPy array
-        # --------------------------------------------------
+        # make sure the seed is a numpy array
 
         seed_position = np.asarray(
             self.initial_position,
             dtype=float,
         ).copy()
 
-        # --------------------------------------------------
-        # Check dimensions
-        # --------------------------------------------------
+        # check dimensions
 
         if seed_position.shape != (
             self.dimensions,
@@ -133,9 +115,7 @@ class ParticleSwarmOptimizer:
 
             return
 
-        # --------------------------------------------------
-        # Keep seed inside bounds
-        # --------------------------------------------------
+        # keep seed inside bounds
 
         seed_position = np.clip(
             seed_position,
@@ -143,21 +123,15 @@ class ParticleSwarmOptimizer:
             self.upper_bounds,
         )
 
-        # --------------------------------------------------
-        # Put previous global best into particle 0
-        # --------------------------------------------------
+        # put previous global best into particle 0
 
         self.positions[0] = seed_position
 
-        # --------------------------------------------------
-        # Start seeded particle with zero velocity
-        # --------------------------------------------------
+        # start seeded particle with zero velocity
 
         self.velocities[0] = 0.0
 
-        # --------------------------------------------------
-        # Recalculate personal best of particle 0
-        # --------------------------------------------------
+        # recalculate personal best of particle 0
 
         seed_score = float(
             self.objective_function(
@@ -173,9 +147,7 @@ class ParticleSwarmOptimizer:
             seed_score
         )
 
-        # --------------------------------------------------
-        # Recalculate swarm global best
-        # --------------------------------------------------
+        # recalculate swarm global best
 
         best_index = np.argmin(
             self.personal_best_scores
@@ -193,9 +165,7 @@ class ParticleSwarmOptimizer:
             ]
         )
 
-        # --------------------------------------------------
-        # Reset history for this optimization run
-        # --------------------------------------------------
+        # reset history for this optimization run
 
         self.history = [
             float(self.global_best_score)
@@ -216,9 +186,7 @@ class ParticleSwarmOptimizer:
             f"{seed_score}"
         )
 
-    # ======================================================
-    # OPTIMIZE
-    # ======================================================
+    # optimize
 
     def optimize(self, iterations=None):
         """
@@ -232,21 +200,15 @@ class ParticleSwarmOptimizer:
         if iterations is None:
             iterations = self.max_iterations
 
-        # ==================================================
-        # APPLY PREVIOUS GLOBAL BEST
-        # ==================================================
+        # apply previous global best
 
         self._apply_initial_position()
 
-        # ==================================================
-        # MAIN PSO LOOP
-        # ==================================================
+        # main pso loop
 
         for _ in range(iterations):
 
-            # --------------------------------------------------
-            # Random coefficients
-            # --------------------------------------------------
+            # random coefficients
 
             r1 = self.rng.random(
                 (
@@ -262,9 +224,7 @@ class ParticleSwarmOptimizer:
                 )
             )
 
-            # --------------------------------------------------
-            # Update velocities
-            # --------------------------------------------------
+            # update velocities
 
             self.velocities = (
                 self.inertia
@@ -285,17 +245,13 @@ class ParticleSwarmOptimizer:
                 )
             )
 
-            # --------------------------------------------------
-            # Move particles
-            # --------------------------------------------------
+            # move particles
 
             self.positions += (
                 self.velocities
             )
 
-            # --------------------------------------------------
-            # Keep particles inside bounds
-            # --------------------------------------------------
+            # keep particles inside bounds
 
             self.positions = np.clip(
                 self.positions,
@@ -303,9 +259,7 @@ class ParticleSwarmOptimizer:
                 self.upper_bounds,
             )
 
-            # --------------------------------------------------
-            # Evaluate particles
-            # --------------------------------------------------
+            # evaluate particles
 
             scores = np.array([
                 self.objective_function(
@@ -314,9 +268,7 @@ class ParticleSwarmOptimizer:
                 for position in self.positions
             ])
 
-            # --------------------------------------------------
-            # Update personal bests
-            # --------------------------------------------------
+            # update personal bests
 
             improved = (
                 scores
@@ -335,9 +287,7 @@ class ParticleSwarmOptimizer:
                 improved
             ]
 
-            # --------------------------------------------------
-            # Update global best
-            # --------------------------------------------------
+            # update global best
 
             best_index = np.argmin(
                 self.personal_best_scores
@@ -362,9 +312,7 @@ class ParticleSwarmOptimizer:
                     ].copy()
                 )
 
-            # --------------------------------------------------
-            # Record convergence
-            # --------------------------------------------------
+            # record convergence
 
             self.history.append(
                 float(
@@ -372,9 +320,7 @@ class ParticleSwarmOptimizer:
                 )
             )
 
-        # ==================================================
-        # FINAL RESULT
-        # ==================================================
+        # final result
 
         return {
             "best_position": (

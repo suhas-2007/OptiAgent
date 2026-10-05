@@ -1,26 +1,23 @@
-// ======================================================
-// OPTIAGENT FRONTEND
-// ======================================================
+// optiagent frontend
 
-// ======================================================
-// CONFIGURATION
-// ======================================================
+// configuration
 
-const API_URL = "https://optiagent-272474227005.asia-south1.run.app";
+const API_URL = (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.protocol === "file:" ||
+    window.location.port === "5000"
+) ? "http://127.0.0.1:5000" : "https://optiagent-272474227005.asia-south1.run.app";
 
 
-// ======================================================
-// DOM HELPERS
-// ======================================================
+// dom helpers
 
 function $(id) {
     return document.getElementById(id);
 }
 
 
-// ======================================================
-// DOM REFERENCES
-// ======================================================
+// dom references
 
 let objectiveInput;
 let dimensionsInput;
@@ -50,9 +47,7 @@ let activityList;
 let activityStatus;
 
 
-// ======================================================
-// INITIALIZE DOM
-// ======================================================
+// initialize dom
 
 function initializeDOM() {
 
@@ -91,11 +86,7 @@ function initializeDOM() {
     errorText = $("errorText");
 
     activityList = $("activityList");
-    activityStatus = $("activityStatus");
-
-    // --------------------------------------------------
-    // Important compatibility aliases
-    // --------------------------------------------------
+    activityStatus = $("activityStatus");    // important compatibility aliases
 
     // Some older versions of the application used
     // activityLog instead of activityList.
@@ -113,9 +104,7 @@ function initializeDOM() {
 }
 
 
-// ======================================================
-// STARTUP
-// ======================================================
+// startup
 
 document.addEventListener(
     "DOMContentLoaded",
@@ -152,13 +141,15 @@ document.addEventListener(
                 );
             }
         );
+
+        setupSmartInput();
+        setupAskAI();
     }
 );
 
 
-// ======================================================
-// API HEALTH
-// ======================================================
+
+// api health
 
 async function checkAPI() {
 
@@ -231,9 +222,7 @@ async function checkAPI() {
 }
 
 
-// ======================================================
-// GENERATE BOUNDS
-// ======================================================
+// generate bounds
 
 function generateBounds() {
 
@@ -310,9 +299,7 @@ function generateBounds() {
 }
 
 
-// ======================================================
-// EXAMPLES
-// ======================================================
+// examples
 
 function setExample(expression) {
 
@@ -325,9 +312,7 @@ function setExample(expression) {
 }
 
 
-// ======================================================
-// GET BOUNDS
-// ======================================================
+// get bounds
 
 function getBounds() {
 
@@ -387,9 +372,7 @@ function getBounds() {
 }
 
 
-// ======================================================
-// AGENT PIPELINE
-// ======================================================
+// agent pipeline
 
 function setAgentStep(step) {
 
@@ -451,9 +434,7 @@ function setAgentStep(step) {
 }
 
 
-// ======================================================
-// BUTTON STATE
-// ======================================================
+// button state
 
 function setRunning(running) {
 
@@ -481,9 +462,7 @@ function setRunning(running) {
 }
 
 
-// ======================================================
-// ACTIVITY
-// ======================================================
+// activity
 
 function clearActivity() {
 
@@ -598,9 +577,7 @@ function setActivityStatus(status) {
 }
 
 
-// ======================================================
-// ERROR PANEL
-// ======================================================
+// error panel
 
 function showError(message) {
 
@@ -642,9 +619,7 @@ function clearError() {
 }
 
 
-// ======================================================
-// RUN OPTIMIZATION
-// ======================================================
+// run optimization
 
 async function runOptimization() {
 
@@ -679,10 +654,8 @@ async function runOptimization() {
         }
 
 
-        // ==================================================
-        // OBSERVE
-        // ==================================================
-
+                // OBSERVE
+        
         setAgentStep(
             "observe"
         );
@@ -694,10 +667,8 @@ async function runOptimization() {
         );
 
 
-        // ==================================================
-        // INPUT
-        // ==================================================
-
+                // INPUT
+        
         if (
             !objectiveInput ||
             !dimensionsInput ||
@@ -794,10 +765,8 @@ async function runOptimization() {
         );
 
 
-        // ==================================================
-        // REASON
-        // ==================================================
-
+                // REASON
+        
         setAgentStep(
             "reason"
         );
@@ -813,10 +782,8 @@ async function runOptimization() {
         );
 
 
-        // ==================================================
-        // PAYLOAD
-        // ==================================================
-
+                // PAYLOAD
+        
         const payload = {
 
             objective:
@@ -836,10 +803,8 @@ async function runOptimization() {
         };
 
 
-        // ==================================================
-        // GEMINI REQUEST
-        // ==================================================
-
+                // GEMINI REQUEST
+        
         addActivity(
             "Requesting strategic decision",
             "Sending the optimization problem to the AI planner.",
@@ -888,10 +853,8 @@ async function runOptimization() {
         );
 
 
-        // ==================================================
-        // API ERROR
-        // ==================================================
-
+                // API ERROR
+        
         if (
             !response.ok ||
             !data.success
@@ -904,10 +867,8 @@ async function runOptimization() {
         }
 
 
-        // ==================================================
-        // DECIDE
-        // ==================================================
-
+                // DECIDE
+        
         setAgentStep(
             "decide"
         );
@@ -935,10 +896,8 @@ async function runOptimization() {
         await sleep(150);
 
 
-        // ==================================================
-        // ACT
-        // ==================================================
-
+                // ACT
+        
         setAgentStep(
             "act"
         );
@@ -957,10 +916,8 @@ async function runOptimization() {
         await sleep(150);
 
 
-        // ==================================================
-        // VALIDATE
-        // ==================================================
-
+                // VALIDATE
+        
         setAgentStep(
             "validate"
         );
@@ -979,10 +936,8 @@ async function runOptimization() {
         await sleep(150);
 
 
-        // ==================================================
-        // ADAPT
-        // ==================================================
-
+                // ADAPT
+        
         const stages =
             Array.isArray(
                 data.stage_history
@@ -1042,10 +997,8 @@ async function runOptimization() {
         }
 
 
-        // ==================================================
-        // COMPLETE
-        // ==================================================
-
+                // COMPLETE
+        
         addActivity(
             "Optimization complete",
             "Best solution obtained and results are ready.",
@@ -1053,10 +1006,8 @@ async function runOptimization() {
         );
 
 
-        // ==================================================
-        // DISPLAY RESULT
-        // ==================================================
-
+                // DISPLAY RESULT
+        
         displayResult(
             data
         );
@@ -1071,10 +1022,8 @@ async function runOptimization() {
         );
 
 
-        // ==================================================
-        // API STATUS
-        // ==================================================
-
+                // API STATUS
+        
         if (connectionStatus) {
 
             connectionStatus.textContent =
@@ -1140,15 +1089,9 @@ async function runOptimization() {
 }
 
 
-// ======================================================
-// EXTRACT STRATEGY
-// ======================================================
+// extract strategy
 
-function extractStrategy(data) {
-
-    // --------------------------------------------------
-    // Direct strategy
-    // --------------------------------------------------
+function extractStrategy(data) {    // direct strategy
 
     if (
         typeof data.strategy ===
@@ -1156,12 +1099,7 @@ function extractStrategy(data) {
     ) {
 
         return data.strategy;
-    }
-
-
-    // --------------------------------------------------
-    // Direct recommended strategy
-    // --------------------------------------------------
+    }    // direct recommended strategy
 
     if (
         typeof data.recommended_strategy ===
@@ -1169,12 +1107,7 @@ function extractStrategy(data) {
     ) {
 
         return data.recommended_strategy;
-    }
-
-
-    // --------------------------------------------------
-    // Gemini recommendation
-    // --------------------------------------------------
+    }    // gemini recommendation
 
     if (
         data.recommendation &&
@@ -1185,12 +1118,7 @@ function extractStrategy(data) {
 
         return data.recommendation
             .recommended_strategy;
-    }
-
-
-    // --------------------------------------------------
-    // Strategy history
-    // --------------------------------------------------
+    }    // strategy history
 
     if (
         Array.isArray(
@@ -1204,12 +1132,7 @@ function extractStrategy(data) {
             data.strategy_history.length - 1
             ]
         );
-    }
-
-
-    // --------------------------------------------------
-    // Stage history
-    // --------------------------------------------------
+    }    // stage history
 
     if (
         Array.isArray(
@@ -1238,9 +1161,7 @@ function extractStrategy(data) {
 }
 
 
-// ======================================================
-// EXTRACT RECOMMENDATION
-// ======================================================
+// extract recommendation
 
 function extractRecommendation(data) {
 
@@ -1281,9 +1202,7 @@ function extractRecommendation(data) {
 }
 
 
-// ======================================================
-// DISPLAY RESULT
-// ======================================================
+// display result
 
 function displayResult(data) {
 
@@ -1293,10 +1212,8 @@ function displayResult(data) {
     );
 
 
-    // ==================================================
-    // BASIC RESULT
-    // ==================================================
-
+        // BASIC RESULT
+    
     if (bestScoreElement) {
 
         bestScoreElement.textContent =
@@ -1315,10 +1232,8 @@ function displayResult(data) {
     }
 
 
-    // ==================================================
-    // STAGES
-    // ==================================================
-
+        // STAGES
+    
     const stages =
         Array.isArray(
             data.stage_history
@@ -1334,10 +1249,8 @@ function displayResult(data) {
     }
 
 
-    // ==================================================
-    // STRATEGIES
-    // ==================================================
-
+        // STRATEGIES
+    
     const strategies =
         Array.isArray(
             data.strategy_history
@@ -1355,10 +1268,8 @@ function displayResult(data) {
     }
 
 
-    // ==================================================
-    // GEMINI RECOMMENDATION
-    // ==================================================
-
+        // GEMINI RECOMMENDATION
+    
     const decision =
         extractRecommendation(
             data
@@ -1371,10 +1282,8 @@ function displayResult(data) {
     );
 
 
-    // ==================================================
-    // STRATEGY
-    // ==================================================
-
+        // STRATEGY
+    
     let selectedStrategy =
         null;
 
@@ -1409,10 +1318,8 @@ function displayResult(data) {
     }
 
 
-    // ==================================================
-    // CONFIDENCE
-    // ==================================================
-
+        // CONFIDENCE
+    
     let confidence =
         null;
 
@@ -1482,10 +1389,8 @@ function displayResult(data) {
     }
 
 
-    // ==================================================
-    // EXPLORATION
-    // ==================================================
-
+        // EXPLORATION
+    
     let exploration =
         null;
 
@@ -1542,10 +1447,8 @@ function displayResult(data) {
     }
 
 
-    // ==================================================
-    // AI REASON
-    // ==================================================
-
+        // AI REASON
+    
     let reason =
         null;
 
@@ -1575,19 +1478,15 @@ function displayResult(data) {
     }
 
 
-    // ==================================================
-    // STRATEGY HISTORY
-    // ==================================================
-
+        // STRATEGY HISTORY
+    
     displayStrategyHistory(
         stages
     );
 
 
-    // ==================================================
-    // CONVERGENCE
-    // ==================================================
-
+        // CONVERGENCE
+    
     const convergence =
         Array.isArray(
             data.convergence_history
@@ -1605,10 +1504,8 @@ function displayResult(data) {
     }
 
 
-    // ==================================================
-    // AGENT BADGE
-    // ==================================================
-
+        // AGENT BADGE
+    
     if (agentBadge) {
 
         agentBadge.textContent =
@@ -1625,9 +1522,7 @@ function displayResult(data) {
 }
 
 
-// ======================================================
-// STRATEGY HISTORY
-// ======================================================
+// strategy history
 
 function displayStrategyHistory(
     stages
@@ -1713,9 +1608,7 @@ function displayStrategyHistory(
 }
 
 
-// ======================================================
-// CONVERGENCE CHART
-// ======================================================
+// convergence chart
 
 function drawConvergenceChart(
     data
@@ -1857,10 +1750,8 @@ function drawConvergenceChart(
     }
 
 
-    // ==================================================
-    // GRAPH DIMENSIONS
-    // ==================================================
-
+        // GRAPH DIMENSIONS
+    
     const padding = {
 
         left: 65,
@@ -1885,10 +1776,8 @@ function drawConvergenceChart(
         padding.bottom;
 
 
-    // ==================================================
-    // RANGE
-    // ==================================================
-
+        // RANGE
+    
     let minValue =
         Math.min(
             ...values
@@ -1920,10 +1809,8 @@ function drawConvergenceChart(
         maxValue +=
             delta;
     }
-    // ==================================================
-    // GRID
-    // ==================================================
-
+        // GRID
+    
     context.strokeStyle =
         "#1d314b";
 
@@ -1997,10 +1884,8 @@ function drawConvergenceChart(
     }
 
 
-    // ==================================================
-    // LINE
-    // ==================================================
-
+        // LINE
+    
     context.beginPath();
 
 
@@ -2067,10 +1952,8 @@ function drawConvergenceChart(
     context.stroke();
 
 
-    // ==================================================
-    // POINTS
-    // ==================================================
-
+        // POINTS
+    
     values.forEach(
         (
             value,
@@ -2125,10 +2008,8 @@ function drawConvergenceChart(
     );
 
 
-    // ==================================================
-    // AXIS LABEL
-    // ==================================================
-
+        // AXIS LABEL
+    
     context.fillStyle =
         "#8fa4bd";
 
@@ -2147,9 +2028,7 @@ function drawConvergenceChart(
 }
 
 
-// ======================================================
-// FORMAT NUMBER
-// ======================================================
+// format number
 
 function formatNumber(value) {
 
@@ -2193,9 +2072,7 @@ function formatNumber(value) {
 }
 
 
-// ======================================================
-// FORMAT POSITION
-// ======================================================
+// format position
 
 function formatPosition(
     position
@@ -2233,9 +2110,7 @@ function formatPosition(
 }
 
 
-// ======================================================
-// ESCAPE HTML
-// ======================================================
+// escape html
 
 function escapeHtml(
     value
@@ -2267,9 +2142,7 @@ function escapeHtml(
 }
 
 
-// ======================================================
-// SLEEP
-// ======================================================
+// sleep
 
 function sleep(
     milliseconds
@@ -2282,4 +2155,282 @@ function sleep(
                 milliseconds
             )
     );
+}
+
+
+// smart input: picture paste & name identification
+
+let currentUploadedImageBase64 = null;
+
+function setupSmartInput() {
+    const identifyBtn = $("identifyButton");
+    const smartQueryInput = $("smartFunctionQuery");
+    const dropZone = $("dropZone");
+    const fileInput = $("imageFileInput");
+    const removeImgBtn = $("removeImageBtn");
+
+    if (identifyBtn && smartQueryInput) {
+        identifyBtn.addEventListener("click", () => {
+            const query = smartQueryInput.value.trim();
+            if (query || currentUploadedImageBase64) {
+                identifyProblem(query, currentUploadedImageBase64);
+            } else {
+                showExtractionStatus("Please type a function name or paste an image.", "info");
+            }
+        });
+
+        smartQueryInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                identifyBtn.click();
+            }
+        });
+    }
+
+    // Clipboard paste handler (Ctrl+V) for screenshots
+    window.addEventListener("paste", (e) => {
+        const items = (e.clipboardData || window.clipboardData)?.items;
+        if (!items) return;
+
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type && items[i].type.indexOf("image") !== -1) {
+                const blob = items[i].getAsFile();
+                if (blob) {
+                    processImageFile(blob);
+                    e.preventDefault();
+                    break;
+                }
+            }
+        }
+    });
+
+    if (dropZone && fileInput) {
+        dropZone.addEventListener("click", (e) => {
+            if (e.target.id !== "removeImageBtn") {
+                fileInput.click();
+            }
+        });
+
+        fileInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                processImageFile(file);
+            }
+        });
+
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("dragover");
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("dragover");
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.classList.remove("dragover");
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                if (file.type.startsWith("image/")) {
+                    processImageFile(file);
+                }
+            }
+        });
+    }
+
+    if (removeImgBtn) {
+        removeImgBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            clearImagePreview();
+        });
+    }
+}
+
+function processImageFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        currentUploadedImageBase64 = e.target.result;
+        showImagePreview(currentUploadedImageBase64);
+        const query = $("smartFunctionQuery") ? $("smartFunctionQuery").value.trim() : "";
+        showExtractionStatus("Image uploaded! Analyzing problem with AI...", "info");
+        identifyProblem(query, currentUploadedImageBase64);
+    };
+    reader.readAsDataURL(file);
+}
+
+function showImagePreview(base64Url) {
+    const previewContainer = $("imagePreviewContainer");
+    const previewImg = $("imagePreview");
+    const dropPrompt = $("dropZonePrompt");
+    if (previewContainer && previewImg) {
+        previewImg.src = base64Url;
+        previewContainer.classList.remove("hidden");
+    }
+    if (dropPrompt) {
+        dropPrompt.classList.add("hidden");
+    }
+}
+
+function clearImagePreview() {
+    currentUploadedImageBase64 = null;
+    const previewContainer = $("imagePreviewContainer");
+    const previewImg = $("imagePreview");
+    const dropPrompt = $("dropZonePrompt");
+    const fileInput = $("imageFileInput");
+    if (previewImg) previewImg.src = "";
+    if (previewContainer) previewContainer.classList.add("hidden");
+    if (dropPrompt) dropPrompt.classList.remove("hidden");
+    if (fileInput) fileInput.value = "";
+    showExtractionStatus("", "hidden");
+}
+
+function showExtractionStatus(message, type) {
+    const statusBox = $("extractionStatus");
+    if (!statusBox) return;
+    if (type === "hidden" || !message) {
+        statusBox.className = "extraction-status hidden";
+        statusBox.textContent = "";
+        return;
+    }
+    statusBox.className = `extraction-status ${type}`;
+    statusBox.textContent = message;
+}
+
+async function identifyProblem(text, imageBase64) {
+    const btnText = $("identifyBtnText");
+    const loader = $("identifyBtnLoader");
+    const identifyBtn = $("identifyButton");
+
+    if (loader) loader.classList.remove("hidden");
+    if (btnText) btnText.textContent = "Analyzing...";
+    if (identifyBtn) identifyBtn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_URL}/api/extract-problem`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                text: text || "",
+                image: imageBase64 || null
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "Could not identify function.");
+        }
+
+        // Apply recognized values into form
+        if (objectiveInput) {
+            objectiveInput.value = data.objective;
+        }
+        if (dimensionsInput) {
+            dimensionsInput.value = data.dimensions;
+        }
+
+        // Regenerate variable bounds rows
+        generateBounds();
+
+        // Populate variable bounds if provided
+        if (Array.isArray(data.bounds)) {
+            data.bounds.forEach((b, idx) => {
+                const lowerInput = $(`lowerBound${idx + 1}`);
+                const upperInput = $(`upperBound${idx + 1}`);
+                if (lowerInput && b[0] !== undefined) lowerInput.value = b[0];
+                if (upperInput && b[1] !== undefined) upperInput.value = b[1];
+            });
+        }
+
+        const infoMsg = `✓ Identified "${data.name}": f(x) = ${data.objective} (${data.dimensions}D). ${data.explanation || ""}`;
+        showExtractionStatus(infoMsg, "success");
+
+    } catch (err) {
+        showExtractionStatus(`✕ Error: ${err.message}`, "error");
+    } finally {
+        if (loader) loader.classList.add("hidden");
+        if (btnText) btnText.textContent = "Identify";
+        if (identifyBtn) identifyBtn.disabled = false;
+    }
+}
+
+
+// ask optiagent: behavior assistant
+
+function setupAskAI() {
+    const askBtn = $("askButton");
+    const askInput = $("askQuestionInput");
+
+    if (askBtn && askInput) {
+        askBtn.addEventListener("click", () => {
+            const q = askInput.value.trim();
+            if (q) {
+                submitQuestion(q);
+            }
+        });
+
+        askInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                askBtn.click();
+            }
+        });
+    }
+}
+
+function askQuickPrompt(promptText) {
+    const askInput = $("askQuestionInput");
+    if (askInput) {
+        askInput.value = promptText;
+    }
+    submitQuestion(promptText);
+}
+
+async function submitQuestion(questionText) {
+    const askBtn = $("askButton");
+    const btnText = $("askButtonText");
+    const loader = $("askButtonLoader");
+    const answerContainer = $("askAnswerContainer");
+    const answerText = $("askAnswerText");
+    const answerSource = $("answerSource");
+
+    if (loader) loader.classList.remove("hidden");
+    if (btnText) btnText.textContent = "Thinking...";
+    if (askBtn) askBtn.disabled = true;
+
+    try {
+        const payload = {
+            question: questionText,
+            objective: objectiveInput ? objectiveInput.value.trim() : "",
+            current_strategy: strategyElement ? strategyElement.textContent.trim() : "",
+            best_score: bestScoreElement ? bestScoreElement.textContent.trim() : null,
+            best_position: bestPositionElement ? bestPositionElement.textContent.trim() : null
+        };
+
+        const response = await fetch(`${API_URL}/api/ask-info`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "Failed to fetch explanation.");
+        }
+
+        if (answerText) answerText.textContent = data.answer;
+        if (answerSource) answerSource.textContent = data.source === "gemini" ? "Gemini AI Tutor" : "Optimization Knowledge";
+        if (answerContainer) answerContainer.classList.remove("hidden");
+
+        answerContainer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    } catch (err) {
+        if (answerText) answerText.textContent = `Could not get answer: ${err.message}`;
+        if (answerSource) answerSource.textContent = "Error";
+        if (answerContainer) answerContainer.classList.remove("hidden");
+    } finally {
+        if (loader) loader.classList.add("hidden");
+        if (btnText) btnText.textContent = "Ask Info";
+        if (askBtn) askBtn.disabled = false;
+    }
 }

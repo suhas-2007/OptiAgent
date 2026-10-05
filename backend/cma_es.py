@@ -20,9 +20,7 @@ class CMAES:
         sigma=0.5,
     ):
 
-        # ==============================================
-        # BASIC CONFIGURATION
-        # ==============================================
+        # basic configuration
 
         self.objective_function = objective_function
         self.dimensions = dimensions
@@ -31,9 +29,7 @@ class CMAES:
             dtype=float
         )
 
-        # ==============================================
-        # ITERATION COMPATIBILITY
-        # ==============================================
+        # iteration compatibility
 
         if max_iterations is not None:
             self.max_iterations = max_iterations
@@ -43,27 +39,21 @@ class CMAES:
         # Registry/benchmark may look for generations
         self.generations = self.max_iterations
 
-        # ==============================================
-        # POPULATION
-        # ==============================================
+        # population
 
         self.population_size = max(
             4,
             int(population_size)
         )
 
-        # ==============================================
-        # SEARCH STEP SIZE
-        # ==============================================
+        # search step size
 
         self.sigma = float(sigma)
 
         # Used by AdaptationEngine detection
         self.initial_sigma = self.sigma
 
-        # ==============================================
-        # INITIAL MEAN
-        # ==============================================
+        # initial mean
 
         self.mean = (
             self.bounds[:, 0]
@@ -74,23 +64,17 @@ class CMAES:
             )
         )
 
-        # ==============================================
-        # COVARIANCE
-        # ==============================================
+        # covariance
 
         self.covariance = np.eye(
             self.dimensions
         )
 
-        # ==============================================
-        # HISTORY
-        # ==============================================
+        # history
 
         self.history = []
 
-    # ==================================================
-    # CLIP TO BOUNDS
-    # ==================================================
+    # clip to bounds
 
     def _clip(self, population):
 
@@ -100,9 +84,7 @@ class CMAES:
             self.bounds[:, 1],
         )
 
-    # ==================================================
-    # INITIALIZE
-    # ==================================================
+    # initialize
 
     def _initialize(self):
 
@@ -121,9 +103,7 @@ class CMAES:
 
         self.history = []
 
-    # ==================================================
-    # OPTIMIZATION
-    # ==================================================
+    # optimization
 
     def optimize(self):
 
@@ -141,17 +121,13 @@ class CMAES:
             )
         )
 
-        # ==============================================
-        # MAIN LOOP
-        # ==============================================
+        # main loop
 
         for iteration in range(
             self.max_iterations
         ):
 
-            # ------------------------------------------
-            # Generate candidate solutions
-            # ------------------------------------------
+            # generate candidate solutions
 
             try:
 
@@ -184,17 +160,13 @@ class CMAES:
                     )
                 )
 
-            # ------------------------------------------
-            # Keep candidates inside bounds
-            # ------------------------------------------
+            # keep candidates inside bounds
 
             population = self._clip(
                 population
             )
 
-            # ------------------------------------------
-            # Evaluate candidates
-            # ------------------------------------------
+            # evaluate candidates
 
             scores = np.array(
                 [
@@ -206,9 +178,7 @@ class CMAES:
                 dtype=float,
             )
 
-            # ------------------------------------------
-            # Sort population
-            # ------------------------------------------
+            # sort population
 
             order = np.argsort(
                 scores
@@ -222,9 +192,7 @@ class CMAES:
                 order
             ]
 
-            # ------------------------------------------
-            # Current generation best
-            # ------------------------------------------
+            # current generation best
 
             generation_best_position = (
                 population[0].copy()
@@ -234,9 +202,7 @@ class CMAES:
                 scores[0]
             )
 
-            # ------------------------------------------
-            # Global best
-            # ------------------------------------------
+            # global best
 
             if (
                 generation_best_score
@@ -251,17 +217,13 @@ class CMAES:
                     generation_best_position.copy()
                 )
 
-            # ------------------------------------------
-            # Save convergence history
-            # ------------------------------------------
+            # save convergence history
 
             self.history.append(
                 float(best_score)
             )
 
-            # ------------------------------------------
-            # Select elite population
-            # ------------------------------------------
+            # select elite population
 
             elite_count = max(
                 2,
@@ -272,18 +234,14 @@ class CMAES:
                 :elite_count
             ]
 
-            # ------------------------------------------
-            # Update mean
-            # ------------------------------------------
+            # update mean
 
             new_mean = np.mean(
                 elite,
                 axis=0,
             )
 
-            # ------------------------------------------
-            # Update covariance
-            # ------------------------------------------
+            # update covariance
 
             centered = (
                 elite - new_mean
@@ -328,9 +286,7 @@ class CMAES:
                     + 0.2 * new_covariance
                 )
 
-            # ------------------------------------------
-            # Numerical stabilization
-            # ------------------------------------------
+            # numerical stabilization
 
             covariance += (
                 np.eye(
@@ -340,9 +296,7 @@ class CMAES:
 
             mean = new_mean
 
-            # ------------------------------------------
-            # Adaptive sigma
-            # ------------------------------------------
+            # adaptive sigma
 
             if len(self.history) >= 10:
 
@@ -371,9 +325,7 @@ class CMAES:
                     )
                 )
 
-        # ==============================================
-        # FINAL RESULT
-        # ==============================================
+        # final result
 
         return {
             "best_position": best_position,

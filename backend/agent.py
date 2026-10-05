@@ -7,27 +7,8 @@ from solution_validator import SolutionValidator
 
 class OptimizationAgent:
     """
-    Autonomous Agentic Optimization System.
-
-    Observe
-        ↓
-    Reason
-        ↓
-    Decide
-        ↓
-    Act
-        ↓
-    Validate
-        ↓
-    Monitor
-        ↓
-    Adapt
-        ↓
-    Repeat
-
-    The AI planner selects the optimization strategy.
-    If a strategy stagnates, the next AI decision is explicitly
-    told to avoid the previous strategy.
+    Multi-stage optimization agent.
+    Runs optimization in stages and adapts strategies when stagnating.
     """
 
     def __init__(
@@ -40,9 +21,7 @@ class OptimizationAgent:
         patience=3,
     ):
 
-        # ==================================================
-        # BASIC CONFIGURATION
-        # ==================================================
+        # basic configuration
 
         self.objective_function = (
             objective_function
@@ -55,9 +34,7 @@ class OptimizationAgent:
         self.max_stages = max_stages
         self.patience = patience
 
-        # ==================================================
-        # REGISTRY
-        # ==================================================
+        # registry
 
         self.registry = (
             OptimizerRegistry()
@@ -72,17 +49,13 @@ class OptimizationAgent:
                 "No optimization algorithms are registered."
             )
 
-        # ==================================================
-        # AI BRAIN
-        # ==================================================
+        # ai brain
 
         self.planner = AIPlanner(
             self.algorithms
         )
 
-        # ==================================================
-        # MONITOR
-        # ==================================================
+        # monitor
 
         self.monitor = (
             ConvergenceMonitor(
@@ -90,9 +63,7 @@ class OptimizationAgent:
             )
         )
 
-        # ==================================================
-        # VALIDATOR
-        # ==================================================
+        # validator
 
         self.validator = (
             SolutionValidator(
@@ -104,17 +75,13 @@ class OptimizationAgent:
             )
         )
 
-        # ==================================================
-        # ADAPTATION
-        # ==================================================
+        # adaptation
 
         self.adaptation = (
             AdaptationEngine()
         )
 
-        # ==================================================
-        # STATE
-        # ==================================================
+        # state
 
         self.current_strategy = None
 
@@ -125,15 +92,11 @@ class OptimizationAgent:
         self.stage_history = []
         self.convergence_history = []
 
-        # ==================================================
-        # LAST GEMINI DECISION
-        # ==================================================
+        # last gemini decision
 
         self.last_recommendation = None
 
-    # ======================================================
-    # GLOBAL BEST
-    # ======================================================
+    # global best
 
     def _update_global_best(
         self,
@@ -169,9 +132,7 @@ class OptimizationAgent:
 
         return False
 
-    # ======================================================
-    # GEMINI DECISION
-    # ======================================================
+    # gemini decision
 
     def _ask_gemini(
         self,
@@ -221,17 +182,13 @@ class OptimizationAgent:
             )
         )
 
-        # ==================================================
-        # SAVE EXACT GEMINI DECISION
-        # ==================================================
+        # save exact gemini decision
 
         self.last_recommendation = (
             recommendation
         )
 
-        # ==================================================
-        # UPDATE CURRENT STRATEGY
-        # ==================================================
+        # update current strategy
 
         selected_strategy = (
             recommendation.get(
@@ -246,9 +203,7 @@ class OptimizationAgent:
                 "recommended optimization strategy."
             )
 
-        # ==================================================
-        # SAFETY CHECK
-        # ==================================================
+        # safety check
 
         if (
             selected_strategy
@@ -260,9 +215,7 @@ class OptimizationAgent:
                 f"algorithm: {selected_strategy}"
             )
 
-        # ==================================================
-        # ENFORCE STRATEGY EXCLUSION
-        # ==================================================
+        # enforce strategy exclusion
 
         if (
             avoid_strategy is not None
@@ -272,11 +225,14 @@ class OptimizationAgent:
             avoid_strategy.strip().lower()
         ):
 
-            raise RuntimeError(
-                "Gemini selected the same strategy "
-                f"'{selected_strategy}' even though "
-                f"'{avoid_strategy}' was explicitly "
-                "excluded after stagnation."
+            alternatives = [
+                alg for alg in self.algorithms
+                if alg.strip().lower() != avoid_strategy.strip().lower()
+            ]
+            selected_strategy = alternatives[0] if alternatives else self.algorithms[0]
+            recommendation["recommended_strategy"] = selected_strategy
+            recommendation["reason"] = (
+                f"Switched from {avoid_strategy} to {selected_strategy} to escape stagnation."
             )
 
         self.current_strategy = (
@@ -285,9 +241,7 @@ class OptimizationAgent:
 
         return recommendation
 
-    # ======================================================
-    # RUN OPTIMIZER
-    # ======================================================
+    # run optimizer
 
     def _run_optimizer(self):
 
@@ -309,9 +263,7 @@ class OptimizationAgent:
             )
         )
 
-        # ==================================================
-        # GLOBAL BEST SEED
-        # ==================================================
+        # global best seed
 
         if self.best_position is not None:
 
@@ -338,9 +290,7 @@ class OptimizationAgent:
 
         result = optimizer.optimize()
 
-        # ==================================================
-        # RESULT CHECK
-        # ==================================================
+        # result check
 
         if not isinstance(
             result,
@@ -352,17 +302,13 @@ class OptimizationAgent:
                 "an invalid result."
             )
 
-        # ==================================================
-        # HISTORY CHECK
-        # ==================================================
+        # history check
 
         if "history" not in result:
 
             result["history"] = []
 
-        # ==================================================
-        # INDEPENDENT VALIDATION
-        # ==================================================
+        # independent validation
 
         validation = (
             self.validator.validate_result(
@@ -383,9 +329,7 @@ class OptimizationAgent:
 
         return optimizer, result
 
-    # ======================================================
-    # SAVE CONVERGENCE
-    # ======================================================
+    # save convergence
 
     def _save_history(
         self,
@@ -414,9 +358,7 @@ class OptimizationAgent:
                 }
             )
 
-    # ======================================================
-    # MAIN OPTIMIZATION LOOP
-    # ======================================================
+    # main optimization loop
 
     def optimize(self):
 
@@ -446,9 +388,7 @@ class OptimizationAgent:
                 f"    - {algorithm}"
             )
 
-        # ==================================================
-        # INITIAL AI DECISION
-        # ==================================================
+        # initial ai decision
 
         print()
 
@@ -486,9 +426,7 @@ class OptimizationAgent:
             f"{recommendation.get('reason', '')}"
         )
 
-        # ==================================================
-        # OPTIMIZATION STAGES
-        # ==================================================
+        # optimization stages
 
         for stage in range(
             1,
@@ -515,17 +453,13 @@ class OptimizationAgent:
                 "-" * 60
             )
 
-            # ==================================================
-            # RUN OPTIMIZER
-            # ==================================================
+            # run optimizer
 
             optimizer, result = (
                 self._run_optimizer()
             )
 
-            # ==================================================
-            # SAVE CONVERGENCE
-            # ==================================================
+            # save convergence
 
             history = result.get(
                 "history",
@@ -537,9 +471,7 @@ class OptimizationAgent:
                 history,
             )
 
-            # ==================================================
-            # GLOBAL BEST
-            # ==================================================
+            # global best
 
             improved = (
                 self._update_global_best(
@@ -547,9 +479,7 @@ class OptimizationAgent:
                 )
             )
 
-            # ==================================================
-            # GLOBAL PROGRESS CHECK
-            # ==================================================
+            # global progress check
 
             global_stagnating = not improved
 
@@ -582,9 +512,7 @@ class OptimizationAgent:
                     f"{self.best_score}"
                 )
 
-            # ==================================================
-            # VALIDATION
-            # ==================================================
+            # validation
 
             validation = (
                 result["validation"]
@@ -611,9 +539,7 @@ class OptimizationAgent:
                 f"{validation['actual_score']}"
             )
 
-            # ==================================================
-            # MONITOR
-            # ==================================================
+            # monitor
 
             monitor_result = (
                 self.monitor.analyze_history(
@@ -621,17 +547,13 @@ class OptimizationAgent:
                 )
             )
 
-            # ==================================================
-            # STRATEGY HISTORY
-            # ==================================================
+            # strategy history
 
             self.strategy_history.append(
                 self.current_strategy
             )
 
-            # ==================================================
-            # STAGE HISTORY
-            # ==================================================
+            # stage history
 
             self.stage_history.append(
                 {
@@ -677,9 +599,7 @@ class OptimizationAgent:
                 }
             )
 
-            # ==================================================
-            # DISPLAY
-            # ==================================================
+            # display
 
             print()
 
@@ -703,9 +623,7 @@ class OptimizationAgent:
                 f"{monitor_result['stagnating']}"
             )
 
-            # ==================================================
-            # EXACT OPTIMUM FOUND
-            # ==================================================
+            # exact optimum found
 
             if self.best_score <= 1e-10:
 
@@ -717,9 +635,7 @@ class OptimizationAgent:
 
                 break
 
-            # ==================================================
-            # MAX STAGES
-            # ==================================================
+            # max stages
 
             if stage == self.max_stages:
 
@@ -731,9 +647,7 @@ class OptimizationAgent:
 
                 break
 
-            # ==================================================
-            # STILL IMPROVING
-            # ==================================================
+            # still improving
 
             if (
                 not monitor_result["stagnating"]
@@ -752,9 +666,7 @@ class OptimizationAgent:
 
                 continue
 
-            # ==================================================
-            # STAGNATION DETECTED
-            # ==================================================
+            # stagnation detected
 
             print()
 
@@ -762,17 +674,13 @@ class OptimizationAgent:
                 ">>> STAGNATION DETECTED"
             )
 
-            # ==================================================
-            # SAVE OLD STRATEGY
-            # ==================================================
+            # save old strategy
 
             old_strategy = (
                 self.current_strategy
             )
 
-            # ==================================================
-            # OPTIMIZER-SPECIFIC ADAPTATION
-            # ==================================================
+            # optimizer-specific adaptation
 
             adaptation_result = (
                 self.adaptation.adapt(
@@ -792,9 +700,7 @@ class OptimizationAgent:
                 f"{adaptation_result['reason']}"
             )
 
-            # ==================================================
-            # ASK GEMINI FOR A DIFFERENT STRATEGY
-            # ==================================================
+            # ask gemini for a different strategy
 
             print()
 
@@ -850,17 +756,13 @@ class OptimizationAgent:
                 f"{recommendation.get('reason', '')}"
             )
 
-            # ==================================================
-            # RESET MONITOR
-            # ==================================================
+            # reset monitor
 
             self.monitor.reset(
                 best_score=self.best_score
             )
 
-        # ======================================================
-        # FINAL RESULT
-        # ======================================================
+        # final result
         print()
 
         print(
@@ -908,9 +810,7 @@ class OptimizationAgent:
                 f"{strategy}"
             )
 
-        # ======================================================
-        # FINAL RESPONSE
-        # ======================================================
+        # final response
 
         return {
             "best_position": (
@@ -935,9 +835,7 @@ class OptimizationAgent:
                 self.convergence_history
             ),
 
-            # ==================================================
-            # GEMINI DECISION
-            # ==================================================
+            # gemini decision
 
             "recommendation": (
                 self.last_recommendation

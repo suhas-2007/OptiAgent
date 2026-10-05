@@ -13,9 +13,7 @@ class CandidateSelector:
     def select(self, expression, dimensions):
         expression_lower = expression.lower()
 
-        # --------------------------------------------------
-        # Function characteristics
-        # --------------------------------------------------
+        # function characteristics
 
         multimodal_terms = [
             "sin",
@@ -42,9 +40,7 @@ class CandidateSelector:
 
         high_dimension = dimensions >= 10
 
-        # --------------------------------------------------
-        # Candidate portfolio
-        # --------------------------------------------------
+        # candidate portfolio
 
         if is_multimodal:
 
@@ -78,9 +74,7 @@ class CandidateSelector:
                 "PSO",
             ]
 
-        # --------------------------------------------------
-        # Keep only registered algorithms
-        # --------------------------------------------------
+        # keep only registered algorithms
 
         candidates = [
             algorithm

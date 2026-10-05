@@ -31,9 +31,7 @@ class SolutionValidator:
             tolerance
         )
 
-        # ==================================================
-        # VALIDATE BOUNDS
-        # ==================================================
+        # validate bounds
 
         if self.bounds.shape != (
             self.dimensions,
@@ -56,9 +54,7 @@ class SolutionValidator:
                 "less than its upper bound."
             )
 
-    # ======================================================
-    # POSITION VALIDATION
-    # ======================================================
+    # position validation
 
     def validate_position(
         self,
@@ -90,9 +86,7 @@ class SolutionValidator:
                 ),
             }
 
-        # --------------------------------------------------
-        # DIMENSION CHECK
-        # --------------------------------------------------
+        # dimension check
 
         if len(position) != self.dimensions:
 
@@ -104,9 +98,7 @@ class SolutionValidator:
                 ),
             }
 
-        # --------------------------------------------------
-        # FINITE CHECK
-        # --------------------------------------------------
+        # finite check
 
         if not np.all(
             np.isfinite(position)
@@ -119,9 +111,7 @@ class SolutionValidator:
                 ),
             }
 
-        # --------------------------------------------------
-        # BOUND CHECK
-        # --------------------------------------------------
+        # bound check
 
         for i, value in enumerate(
             position
@@ -160,9 +150,7 @@ class SolutionValidator:
             "position": position,
         }
 
-    # ======================================================
-    # SCORE VALIDATION
-    # ======================================================
+    # score validation
 
     def validate_score(
         self,
@@ -202,9 +190,7 @@ class SolutionValidator:
             "score": score,
         }
 
-    # ======================================================
-    # RE-EVALUATE SOLUTION
-    # ======================================================
+    # re-evaluate solution
 
     def reevaluate(
         self,
@@ -271,9 +257,7 @@ class SolutionValidator:
             ),
         }
 
-    # ======================================================
-    # HISTORY ANALYSIS
-    # ======================================================
+    # history analysis
 
     def analyze_history(
         self,
@@ -317,9 +301,7 @@ class SolutionValidator:
                 "best_score": None,
             }
 
-        # --------------------------------------------------
-        # BASIC INFORMATION
-        # --------------------------------------------------
+        # basic information
 
         best_score = min(
             values
@@ -345,9 +327,7 @@ class SolutionValidator:
             improvement = 0.0
             improving = False
 
-        # --------------------------------------------------
-        # RECENT HISTORY
-        # --------------------------------------------------
+        # recent history
 
         recent_count = min(
             5,
@@ -404,18 +384,14 @@ class SolutionValidator:
             ),
         }
 
-    # ======================================================
-    # COMPLETE RESULT VALIDATION
-    # ======================================================
+    # complete result validation
 
     def validate_result(
         self,
         result,
     ):
 
-        # --------------------------------------------------
-        # RESULT TYPE
-        # --------------------------------------------------
+        # result type
 
         if not isinstance(
             result,
@@ -431,9 +407,7 @@ class SolutionValidator:
                 ),
             }
 
-        # --------------------------------------------------
-        # REQUIRED POSITION
-        # --------------------------------------------------
+        # required position
 
         if "best_position" not in result:
 
@@ -446,9 +420,7 @@ class SolutionValidator:
                 ),
             }
 
-        # --------------------------------------------------
-        # REQUIRED SCORE
-        # --------------------------------------------------
+        # required score
 
         if "best_score" not in result:
 
@@ -461,9 +433,7 @@ class SolutionValidator:
                 ),
             }
 
-        # ==================================================
-        # POSITION
-        # ==================================================
+        # position
 
         position_result = (
             self.validate_position(
@@ -485,9 +455,7 @@ class SolutionValidator:
                 ),
             }
 
-        # ==================================================
-        # REPORTED SCORE
-        # ==================================================
+        # reported score
 
         score_result = (
             self.validate_score(
@@ -509,9 +477,7 @@ class SolutionValidator:
                 ),
             }
 
-        # ==================================================
-        # INDEPENDENT RE-EVALUATION
-        # ==================================================
+        # independent re-evaluation
 
         reevaluated = (
             self.reevaluate(
@@ -533,9 +499,7 @@ class SolutionValidator:
                 ),
             }
 
-        # ==================================================
-        # SCORES
-        # ==================================================
+        # scores
 
         reported_score = (
             score_result["score"]
@@ -572,9 +536,7 @@ class SolutionValidator:
             <= self.tolerance
         )
 
-        # ==================================================
-        # HISTORY
-        # ==================================================
+        # history
 
         history_analysis = (
             self.analyze_history(
@@ -585,9 +547,7 @@ class SolutionValidator:
             )
         )
 
-        # ==================================================
-        # RELIABILITY
-        # ==================================================
+        # reliability
 
         reliable = (
             score_consistent
@@ -601,9 +561,7 @@ class SolutionValidator:
             )
         )
 
-        # ==================================================
-        # RESULT
-        # ==================================================
+        # result
 
         return {
 

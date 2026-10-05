@@ -33,15 +33,11 @@ class DifferentialEvolution:
 
         self.rng = np.random.default_rng(seed)
 
-        # ==================================================
-        # OPTIONAL GLOBAL-BEST SEED
-        # ==================================================
+        # optional global-best seed
 
         self.initial_position = None
 
-        # ==================================================
-        # INITIAL POPULATION
-        # ==================================================
+        # initial population
 
         self.population = self.rng.uniform(
             self.lower_bounds,
@@ -52,18 +48,14 @@ class DifferentialEvolution:
             ),
         )
 
-        # ==================================================
-        # INITIAL SCORES
-        # ==================================================
+        # initial scores
 
         self.scores = np.array([
             self.objective_function(x)
             for x in self.population
         ])
 
-        # ==================================================
-        # INITIAL GLOBAL BEST
-        # ==================================================
+        # initial global best
 
         best_index = np.argmin(
             self.scores
@@ -81,17 +73,13 @@ class DifferentialEvolution:
             ]
         )
 
-        # ==================================================
-        # HISTORY
-        # ==================================================
+        # history
 
         self.history = [
             self.global_best_score
         ]
 
-    # ======================================================
-    # APPLY GLOBAL-BEST SEED
-    # ======================================================
+    # apply global-best seed
 
     def _apply_initial_position(self):
 
@@ -103,18 +91,14 @@ class DifferentialEvolution:
             dtype=float,
         ).copy()
 
-        # --------------------------------------------------
-        # Validate dimensions
-        # --------------------------------------------------
+        # validate dimensions
 
         if seed_position.shape != (
             self.dimensions,
         ):
             return
 
-        # --------------------------------------------------
-        # Keep inside bounds
-        # --------------------------------------------------
+        # keep inside bounds
 
         seed_position = np.clip(
             seed_position,
@@ -122,17 +106,13 @@ class DifferentialEvolution:
             self.upper_bounds,
         )
 
-        # --------------------------------------------------
-        # Put previous best into first individual
-        # --------------------------------------------------
+        # put previous best into first individual
 
         self.population[0] = (
             seed_position
         )
 
-        # --------------------------------------------------
-        # Recalculate its score
-        # --------------------------------------------------
+        # recalculate its score
 
         seed_score = float(
             self.objective_function(
@@ -144,9 +124,7 @@ class DifferentialEvolution:
             seed_score
         )
 
-        # --------------------------------------------------
-        # Recalculate global best
-        # --------------------------------------------------
+        # recalculate global best
 
         best_index = np.argmin(
             self.scores
@@ -164,9 +142,7 @@ class DifferentialEvolution:
             ]
         )
 
-        # --------------------------------------------------
-        # Reset history
-        # --------------------------------------------------
+        # reset history
 
         self.history = [
             self.global_best_score
@@ -188,9 +164,7 @@ class DifferentialEvolution:
             f"{seed_score}"
         )
 
-    # ======================================================
-    # OPTIMIZE
-    # ======================================================
+    # optimize
 
     def optimize(
         self,
@@ -200,15 +174,11 @@ class DifferentialEvolution:
         Run Differential Evolution for several generations.
         """
 
-        # ==================================================
-        # APPLY PREVIOUS GLOBAL BEST
-        # ==================================================
+        # apply previous global best
 
         self._apply_initial_position()
 
-        # ==================================================
-        # MAIN DE LOOP
-        # ==================================================
+        # main de loop
 
         for _ in range(iterations):
 
@@ -224,9 +194,7 @@ class DifferentialEvolution:
                     if j != i
                 ]
 
-                # --------------------------------------------------
-                # Select three different individuals
-                # --------------------------------------------------
+                # select three different individuals
 
                 a, b, c = self.rng.choice(
                     candidates,
@@ -234,9 +202,7 @@ class DifferentialEvolution:
                     replace=False,
                 )
 
-                # --------------------------------------------------
-                # Mutation
-                # --------------------------------------------------
+                # mutation
 
                 mutant = (
                     self.population[a]
@@ -253,9 +219,7 @@ class DifferentialEvolution:
                     self.upper_bounds,
                 )
 
-                # --------------------------------------------------
-                # Crossover
-                # --------------------------------------------------
+                # crossover
 
                 trial = (
                     self.population[i].copy()
@@ -281,9 +245,7 @@ class DifferentialEvolution:
                     mutant[mask]
                 )
 
-                # --------------------------------------------------
-                # Evaluate trial
-                # --------------------------------------------------
+                # evaluate trial
 
                 trial_score = float(
                     self.objective_function(
@@ -291,9 +253,7 @@ class DifferentialEvolution:
                     )
                 )
 
-                # --------------------------------------------------
-                # Selection
-                # --------------------------------------------------
+                # selection
 
                 if (
                     trial_score
@@ -308,9 +268,7 @@ class DifferentialEvolution:
                         trial_score
                     )
 
-                    # ----------------------------------------------
-                    # Update global best
-                    # ----------------------------------------------
+                    # update global best
 
                     if (
                         trial_score
@@ -325,9 +283,7 @@ class DifferentialEvolution:
                             trial.copy()
                         )
 
-            # --------------------------------------------------
-            # Record convergence
-            # --------------------------------------------------
+            # record convergence
 
             self.history.append(
                 float(
@@ -335,9 +291,7 @@ class DifferentialEvolution:
                 )
             )
 
-        # ==================================================
-        # FINAL RESULT
-        # ==================================================
+        # final result
 
         return {
             "best_position": (

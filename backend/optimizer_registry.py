@@ -66,9 +66,7 @@ class OptimizerRegistry:
             bounds,
         )
 
-    # ==================================================
-    # OPTIMIZER FACTORIES
-    # ==================================================
+    # optimizer factories
 
     def _create_pso(
         self,

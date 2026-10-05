@@ -13,9 +13,7 @@
 
 <body>
 
-    <!-- =========================================================
-     TOP BAR
-========================================================= -->
+    <!-- top bar -->
 
     <header class="topbar">
 
@@ -42,16 +40,12 @@
     </header>
 
 
-    <!-- =========================================================
-     MAIN
-========================================================= -->
+    <!-- main -->
 
     <main class="container">
 
 
-        <!-- =====================================================
-         HERO
-    ====================================================== -->
+        <!-- hero -->
 
         <section class="hero">
 
@@ -74,9 +68,7 @@
         </section>
 
 
-        <!-- =====================================================
-         PIPELINE
-    ====================================================== -->
+        <!-- pipeline -->
 
         <section class="pipeline-card">
 
@@ -135,16 +127,12 @@
         </section>
 
 
-        <!-- =====================================================
-         DASHBOARD
-    ====================================================== -->
+        <!-- dashboard -->
 
         <div class="dashboard-grid">
 
 
-            <!-- =================================================
-             LEFT — OPTIMIZATION SETUP
-        ================================================== -->
+            <!-- left - optimization setup -->
 
             <section class="card">
 
@@ -165,7 +153,38 @@
                 </div>
 
 
+                <!-- SMART INPUT: PICTURE OR NAME -->
+                <div class="smart-input-box">
+                    <div class="smart-input-header">
+                        <span class="smart-badge">NEW</span>
+                        <span class="smart-title">Paste Question Picture or Type Function Name</span>
+                    </div>
+
+                    <div class="smart-search-row">
+                        <input id="smartFunctionQuery" type="text" placeholder='Type name e.g. "nelder mead function", "rosenbrock", "ackley"...' autocomplete="off">
+                        <button id="identifyButton" type="button" class="secondary-btn">
+                            <span id="identifyBtnText">Identify</span>
+                            <span id="identifyBtnLoader" class="loader hidden"></span>
+                        </button>
+                    </div>
+
+                    <div id="dropZone" class="paste-zone">
+                        <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
+                        <div id="dropZonePrompt" class="paste-zone-prompt">
+                            <span class="paste-icon">📋</span>
+                            <span><strong>Paste question screenshot (Ctrl+V)</strong> or click to upload picture</span>
+                        </div>
+                        <div id="imagePreviewContainer" class="image-preview-container hidden">
+                            <img id="imagePreview" src="" alt="Pasted Question Preview">
+                            <button id="removeImageBtn" type="button" class="remove-img-btn" title="Remove image">✕</button>
+                        </div>
+                    </div>
+
+                    <div id="extractionStatus" class="extraction-status hidden"></div>
+                </div>
+
                 <!-- OBJECTIVE -->
+
 
                 <label for="objective">
                     Objective Function
@@ -291,9 +310,7 @@
 
 
 
-            <!-- =================================================
-             RIGHT — AI BRAIN
-        ================================================== -->
+            <!-- right - ai brain -->
 
             <section class="card ai-card">
 
@@ -386,9 +403,7 @@
         </div>
 
 
-        <!-- =====================================================
-         ERROR
-    ====================================================== -->
+        <!-- error -->
 
         <div id="errorMessage" class="reason-box hidden" style="margin-top:22px;">
 
@@ -401,9 +416,7 @@
         </div>
 
 
-        <!-- =====================================================
-         LIVE AGENT ACTIVITY
-    ====================================================== -->
+        <!-- live agent activity -->
 
         <section id="activitySection" class="card" style="margin-top:22px;">
 
@@ -439,9 +452,7 @@
         </section>
 
 
-        <!-- =====================================================
-         RESULT
-    ====================================================== -->
+        <!-- result -->
 
         <section class="card" style="margin-top:22px;">
 
@@ -520,9 +531,7 @@
         </section>
 
 
-        <!-- =====================================================
-         STRATEGY HISTORY
-    ====================================================== -->
+        <!-- strategy history -->
 
         <section class="card" style="margin-top:22px;">
 
@@ -554,9 +563,7 @@
         </section>
 
 
-        <!-- =====================================================
-         CONVERGENCE
-    ====================================================== -->
+        <!-- convergence -->
 
         <section class="card convergence-card">
 
@@ -602,14 +609,66 @@
 
             </div>
 
+        <!-- ask optiagent: function & optimizer behavior -->
+
+        <section class="card ask-ai-card" style="margin-top:22px;">
+
+            <div class="card-header">
+                <div>
+                    <div class="label">
+                        AI BEHAVIOR TUTOR
+                    </div>
+                    <h3>
+                        Ask About Function or Optimizer Behavior
+                    </h3>
+                </div>
+                <span class="badge">
+                    INTERACTIVE
+                </span>
+            </div>
+
+            <p class="section-desc">
+                Curious how Nelder-Mead works, why the algorithm adapted, or how a function behaves? Ask any question below:
+            </p>
+
+            <div class="quick-prompts">
+                <button type="button" class="prompt-chip" onclick="askQuickPrompt('How does Nelder-Mead behave?')">
+                    How does Nelder-Mead behave?
+                </button>
+                <button type="button" class="prompt-chip" onclick="askQuickPrompt('How does this objective function behave?')">
+                    How does this function behave?
+                </button>
+                <button type="button" class="prompt-chip" onclick="askQuickPrompt('Why do local minima trap optimization algorithms?')">
+                    Why do local minima trap algorithms?
+                </button>
+                <button type="button" class="prompt-chip" onclick="askQuickPrompt('Explain how the selected optimizer works')">
+                    Explain selected optimizer
+                </button>
+            </div>
+
+            <div class="ask-input-row">
+                <input id="askQuestionInput" type="text" placeholder="e.g. How does Nelder-Mead behave? Why did it choose this strategy?" autocomplete="off">
+                <button id="askButton" type="button" class="primary-button-small">
+                    <span id="askButtonText">Ask Info</span>
+                    <span id="askButtonLoader" class="loader hidden"></span>
+                </button>
+            </div>
+
+            <div id="askAnswerContainer" class="reason-box hidden" style="margin-top:16px;">
+                <div class="answer-header">
+                    <strong>AI Behavior Explanation</strong>
+                    <span id="answerSource" class="small-tag">Gemini</span>
+                </div>
+                <p id="askAnswerText"></p>
+            </div>
+
         </section>
 
     </main>
 
 
-    <!-- =========================================================
-     FOOTER
-========================================================= -->
+
+    <!-- footer -->
 
     <footer>
 
@@ -632,9 +691,7 @@
     </footer>
 
 
-    <!-- =========================================================
-     JAVASCRIPT
-========================================================= -->
+    <!-- javascript -->
 
     <script src="app.js"></script>
 

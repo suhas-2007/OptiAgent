@@ -9,31 +9,11 @@ from google.genai import errors
 
 class AIPlanner:
     """
-    Gemini-powered strategic planner for OptiAgent.
-
-    Primary:
-        Gemini Function Calling / AFC
-
-    Fallback:
-        Local intelligent strategy selection
-
-    Supports:
-        - PSO
-        - Differential Evolution
-        - Genetic Algorithm
-        - Simulated Annealing
-        - Hill Climbing
-        - CMA-ES
-        - Nelder-Mead
-
-    If Gemini becomes unavailable or quota is exhausted,
-    the planner permanently switches to the local fallback
-    for the lifetime of this planner instance.
+    Selects optimization strategies based on problem characteristics.
+    Uses Gemini when available, with a fast local fallback.
     """
 
-    # ======================================================
-    # INITIALIZATION
-    # ======================================================
+    # initialization
 
     def __init__(
         self,
@@ -50,9 +30,7 @@ class AIPlanner:
 
         self.algorithms = list(algorithms)
 
-        # ==================================================
-        # API KEY
-        # ==================================================
+        # api key
 
         self.api_key = (
             api_key
@@ -60,21 +38,17 @@ class AIPlanner:
             or os.getenv("GOOGLE_API_KEY")
         )
 
-        # ==================================================
-        # MODEL
-        # ==================================================
+        # model
 
         self.model = (
             model
             or os.getenv(
                 "GEMINI_MODEL",
-                "gemini-3.6-flash",
+                "gemini-3.5-flash-lite",
             )
         )
 
-        # ==================================================
-        # GEMINI CLIENT
-        # ==================================================
+        # gemini client
 
         self.client = None
 
@@ -97,9 +71,7 @@ class AIPlanner:
 
                 self.client = None
 
-        # ==================================================
-        # STATE
-        # ==================================================
+        # state
 
         self.last_recommendation = None
 
@@ -113,9 +85,7 @@ class AIPlanner:
         # unnecessary Gemini requests again.
         self.gemini_quota_exhausted = False
 
-    # ======================================================
-    # GEMINI FUNCTION
-    # ======================================================
+    # gemini function
 
     def select_optimization_strategy(
         self,
@@ -139,9 +109,7 @@ class AIPlanner:
 
         selected_algorithm = None
 
-        # ==================================================
-        # MATCH ALGORITHM
-        # ==================================================
+        # match algorithm
 
         for available in self.algorithms:
 
@@ -155,9 +123,7 @@ class AIPlanner:
 
                 break
 
-        # ==================================================
-        # INVALID
-        # ==================================================
+        # invalid
 
         if selected_algorithm is None:
 
@@ -168,9 +134,7 @@ class AIPlanner:
                 f"{self.algorithms}"
             )
 
-        # ==================================================
-        # EXPLORATION
-        # ==================================================
+        # exploration
 
         exploration = (
             str(
@@ -188,9 +152,7 @@ class AIPlanner:
 
             exploration = "medium"
 
-        # ==================================================
-        # CONFIDENCE
-        # ==================================================
+        # confidence
 
         try:
 
@@ -213,9 +175,7 @@ class AIPlanner:
             ),
         )
 
-        # ==================================================
-        # RESULT
-        # ==================================================
+        # result
 
         result = {
 
@@ -248,9 +208,7 @@ class AIPlanner:
 
         return result
 
-    # ======================================================
-    # BUILD PROMPT
-    # ======================================================
+    # build prompt
 
     def _build_prompt(
         self,
@@ -295,9 +253,7 @@ class AIPlanner:
             bounds_text
         )
 
-        # ==================================================
-        # CURRENT STRATEGY
-        # ==================================================
+        # current strategy
 
         current_strategy_text = (
             "None"
@@ -305,9 +261,7 @@ class AIPlanner:
             else str(current_strategy)
         )
 
-        # ==================================================
-        # SCORE
-        # ==================================================
+        # score
 
         score_text = (
             "None"
@@ -315,9 +269,7 @@ class AIPlanner:
             else str(best_score)
         )
 
-        # ==================================================
-        # VALIDATION
-        # ==================================================
+        # validation
 
         if validation is None:
 
@@ -339,9 +291,7 @@ class AIPlanner:
                 f"{validation.get('reason')}"
             )
 
-        # ==================================================
-        # STRATEGY EXCLUSION
-        # ==================================================
+        # strategy exclusion
 
         if avoid_strategy:
 
@@ -376,9 +326,7 @@ No optimizer is currently excluded.
 Select the most appropriate optimizer.
 """
 
-        # ==================================================
-        # PROMPT
-        # ==================================================
+        # prompt
 
         return f"""
 You are the strategic optimization brain
@@ -493,9 +441,7 @@ exploration_level
 confidence
 """
 
-    # ======================================================
-    # GEMINI TOOL
-    # ======================================================
+    # gemini tool
 
     def _get_tool(self):
 
@@ -578,9 +524,7 @@ confidence
             ]
         )
 
-    # ======================================================
-    # LOCAL FALLBACK
-    # ======================================================
+    # local fallback
 
     def _local_fallback(
         self,
@@ -604,9 +548,7 @@ confidence
             problem_description
         ).lower()
 
-        # ==================================================
-        # REMOVE AVOIDED STRATEGY
-        # ==================================================
+        # remove avoided strategy
 
         available = [
 
@@ -632,9 +574,7 @@ confidence
                 "strategy exclusion."
             )
 
-        # ==================================================
-        # DETECT FUNCTION TYPE
-        # ==================================================
+        # detect function type
 
         multimodal = any(
             keyword in text
@@ -666,9 +606,7 @@ confidence
             ]
         )
 
-        # ==================================================
-        # INITIAL CANDIDATE ORDER
-        # ==================================================
+        # initial candidate order
 
         if multimodal:
 
@@ -746,9 +684,7 @@ confidence
                 "Hill Climbing",
             ]
 
-        # ==================================================
-        # STAGNATION
-        # ==================================================
+        # stagnation
 
         if (
             optimization_status
@@ -772,9 +708,7 @@ confidence
                 "Hill Climbing",
             ]
 
-        # ==================================================
-        # FILTER
-        # ==================================================
+        # filter
 
         filtered = [
 
@@ -789,9 +723,7 @@ confidence
 
             filtered = available
 
-        # ==================================================
-        # AVOID SAME STRATEGY
-        # ==================================================
+        # avoid same strategy
 
         if (
             current_strategy
@@ -817,15 +749,11 @@ confidence
 
                 filtered = different
 
-        # ==================================================
-        # SELECT
-        # ==================================================
+        # select
 
         selected = filtered[0]
 
-        # ==================================================
-        # EXPLORATION
-        # ==================================================
+        # exploration
 
         if (
             optimization_status
@@ -850,15 +778,11 @@ confidence
 
             exploration = "medium"
 
-        # ==================================================
-        # CONFIDENCE
-        # ==================================================
+        # confidence
 
         confidence = 0.70
 
-        # ==================================================
-        # REASON
-        # ==================================================
+        # reason
 
         if (
             optimization_status
@@ -908,9 +832,7 @@ confidence
                 "dimensionality, and search requirements."
             )
 
-        # ==================================================
-        # RESULT
-        # ==================================================
+        # result
 
         result = {
 
@@ -970,9 +892,7 @@ confidence
 
         return result
 
-    # ======================================================
-    # SEND GEMINI REQUEST
-    # ======================================================
+    # send gemini request
 
     def _send_request(
         self,
@@ -1000,9 +920,7 @@ confidence
 
         last_error = None
 
-        # ==================================================
-        # RETRIES
-        # ==================================================
+        # retries
 
         for attempt in range(
             1,
@@ -1018,9 +936,7 @@ confidence
                     f"{attempt}/{max_attempts}"
                 )
 
-                # ==========================================
-                # CONFIG
-                # ==========================================
+                # config
 
                 config = (
                     types.GenerateContentConfig(
@@ -1069,9 +985,7 @@ confidence
                     )
                 )
 
-                # ==========================================
-                # REQUEST
-                # ==========================================
+                # request
 
                 response = (
                     self.client.models.generate_content(
@@ -1090,9 +1004,7 @@ confidence
                         "Gemini returned an empty response."
                     )
 
-                # ==========================================
-                # FIND FUNCTION CALL
-                # ==========================================
+                # find function call
 
                 function_call = None
 
@@ -1128,9 +1040,7 @@ confidence
                     if function_call:
                         break
 
-                # ==========================================
-                # NO FUNCTION CALL
-                # ==========================================
+                # no function call
 
                 if function_call is None:
 
@@ -1153,9 +1063,7 @@ confidence
                         f"Response: {response_text}"
                     )
 
-                # ==========================================
-                # VERIFY
-                # ==========================================
+                # verify
 
                 if (
                     function_call.name
@@ -1168,9 +1076,7 @@ confidence
                         f"{function_call.name}"
                     )
 
-                # ==========================================
-                # ARGUMENTS
-                # ==========================================
+                # arguments
 
                 arguments = dict(
                     function_call.args
@@ -1187,9 +1093,7 @@ confidence
                     f"{arguments.get('algorithm')}"
                 )
 
-                # ==========================================
-                # EXECUTE
-                # ==========================================
+                # execute
 
                 return (
                     self.select_optimization_strategy(
@@ -1197,9 +1101,7 @@ confidence
                     )
                 )
 
-            # ==================================================
-            # CLIENT ERROR
-            # ==================================================
+            # client error
 
             except errors.ClientError as exc:
 
@@ -1215,9 +1117,7 @@ confidence
                     f"{error_text}"
                 )
 
-                # ==========================================
-                # QUOTA
-                # ==========================================
+                # quota
 
                 if (
                     "429" in error_text
@@ -1238,9 +1138,7 @@ confidence
                         "Gemini API quota exhausted."
                     ) from exc
 
-                # ==========================================
-                # RETRY OTHER CLIENT ERRORS
-                # ==========================================
+                # retry other client errors
 
                 if attempt < max_attempts:
 
@@ -1259,9 +1157,7 @@ confidence
                         wait_time
                     )
 
-            # ==================================================
-            # SERVER ERROR
-            # ==================================================
+            # server error
 
             except errors.ServerError as exc:
 
@@ -1279,9 +1175,7 @@ confidence
                         )
                     )
 
-            # ==================================================
-            # TIMEOUT
-            # ==================================================
+            # timeout
 
             except httpx.ReadTimeout as exc:
 
@@ -1299,9 +1193,7 @@ confidence
                         )
                     )
 
-            # ==================================================
-            # NETWORK ERROR
-            # ==================================================
+            # network error
 
             except httpx.HTTPError as exc:
 
@@ -1319,9 +1211,7 @@ confidence
                         )
                     )
 
-        # ==================================================
-        # FAILURE
-        # ==================================================
+        # failure
 
         raise RuntimeError(
             "Gemini failed after "
@@ -1329,9 +1219,7 @@ confidence
             f"Last error: {last_error}"
         ) from last_error
 
-    # ======================================================
-    # PUBLIC STRATEGY METHOD
-    # ======================================================
+    # public strategy method
 
     def recommend_strategy(
         self,
@@ -1354,15 +1242,11 @@ confidence
         decisions use the local fallback.
         """
 
-        # ==================================================
-        # RESET LAST RECOMMENDATION
-        # ==================================================
+        # reset last recommendation
 
         self.last_recommendation = None
 
-        # ==================================================
-        # BUILD PROMPT
-        # ==================================================
+        # build prompt
 
         prompt = self._build_prompt(
 
@@ -1397,11 +1281,7 @@ confidence
             avoid_strategy=(
                 avoid_strategy
             ),
-        )
-      # ==================================================
-        # TRY GEMINI
-        # ==================================================
-
+        )        # TRY GEMINI
         recommendation = None
 
         if (
@@ -1455,9 +1335,7 @@ confidence
                     ">>> Switching to local fallback..."
                 )
 
-        # ==================================================
-        # FALLBACK
-        # ==================================================
+        # fallback
 
         if recommendation is None:
 
@@ -1498,9 +1376,7 @@ confidence
                 )
             )
 
-        # ==================================================
-        # VALIDATION
-        # ==================================================
+        # validation
 
         if not isinstance(
             recommendation,
@@ -1536,9 +1412,7 @@ confidence
                 f"{selected}"
             )
 
-        # ==================================================
-        # ENFORCE EXCLUSION
-        # ==================================================
+        # enforce exclusion
 
         if (
             avoid_strategy
@@ -1556,9 +1430,7 @@ confidence
                 f"'{avoid_strategy}' stagnated."
             )
 
-        # ==================================================
-        # CONFIDENCE
-        # ==================================================
+        # confidence
 
         try:
 
@@ -1588,9 +1460,7 @@ confidence
             "confidence"
         ] = confidence
 
-        # ==================================================
-        # EXPLORATION
-        # ==================================================
+        # exploration
 
         exploration = (
             recommendation.get(
@@ -1611,9 +1481,7 @@ confidence
             "exploration_level"
         ] = exploration
 
-        # ==================================================
-        # HISTORY
-        # ==================================================
+        # history
 
         self.decision_history.append(
 
@@ -1651,9 +1519,7 @@ confidence
             }
         )
 
-        # ==================================================
-        # DISPLAY
-        # ==================================================
+        # display
 
         print()
         print(
@@ -1686,9 +1552,7 @@ confidence
 
         return recommendation
 
-    # ======================================================
-    # HISTORY
-    # ======================================================
+    # history
 
     def get_decision_history(
         self,
@@ -1698,9 +1562,7 @@ confidence
             self.decision_history
         )
 
-    # ======================================================
-    # RESET HISTORY
-    # ======================================================
+    # reset history
 
     def reset_history(
         self,

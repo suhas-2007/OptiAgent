@@ -32,11 +32,12 @@ class SafeFunction:
 
     def __init__(self, expression):
 
-        self.expression = expression
+        cleaned = str(expression).strip().replace("^", "**")
+        self.expression = cleaned
 
         # Parse expression without executing it.
         self.tree = ast.parse(
-            expression,
+            cleaned,
             mode="eval",
         )
 
@@ -166,6 +167,9 @@ class SafeFunction:
             f"x{i + 1}": float(value)
             for i, value in enumerate(x)
         }
+        for i, name in enumerate(["x", "y", "z"]):
+            if i < len(x):
+                variables[name] = float(x[i])
 
         return float(
             self._evaluate(

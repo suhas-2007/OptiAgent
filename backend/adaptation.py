@@ -15,9 +15,7 @@ class AdaptationEngine:
 
         self.actions_taken = []
 
-    # ======================================================
-    # MAIN ADAPTATION METHOD
-    # ======================================================
+    # main adaptation method
 
     def adapt(
         self,
@@ -41,9 +39,7 @@ class AdaptationEngine:
             OptiAgent's global best solution.
         """
 
-        # ==================================================
-        # CHECK BOTH TYPES OF PROGRESS
-        # ==================================================
+        # check both types of progress
 
         optimizer_stagnating = (
             monitor_result.get(
@@ -52,9 +48,7 @@ class AdaptationEngine:
             )
         )
 
-        # ==================================================
-        # NO STAGNATION
-        # ==================================================
+        # no stagnation
 
         if (
             not optimizer_stagnating
@@ -75,9 +69,7 @@ class AdaptationEngine:
 
             return action
 
-        # ==================================================
-        # GLOBAL STAGNATION
-        # ==================================================
+        # global stagnation
 
         if global_stagnating:
 
@@ -92,9 +84,7 @@ class AdaptationEngine:
                 "The current stage improved the global best."
             )
 
-        # --------------------------------------------------
-        # PSO
-        # --------------------------------------------------
+        # pso
 
         if hasattr(
             optimizer,
@@ -151,9 +141,7 @@ class AdaptationEngine:
 
             return action
 
-        # --------------------------------------------------
-        # DIFFERENTIAL EVOLUTION
-        # --------------------------------------------------
+        # differential evolution
 
         if (
             hasattr(
@@ -268,9 +256,7 @@ class AdaptationEngine:
 
             return action
 
-        # --------------------------------------------------
-        # SIMULATED ANNEALING
-        # --------------------------------------------------
+        # simulated annealing
 
         if hasattr(
             optimizer,
@@ -310,9 +296,7 @@ class AdaptationEngine:
 
             return action
 
-        # --------------------------------------------------
-        # GENETIC ALGORITHM
-        # --------------------------------------------------
+        # genetic algorithm
 
         if hasattr(
             optimizer,
@@ -356,9 +340,7 @@ class AdaptationEngine:
 
             return action
 
-        # --------------------------------------------------
-        # HILL CLIMBING
-        # --------------------------------------------------
+        # hill climbing
 
         if hasattr(
             optimizer,
@@ -384,9 +366,7 @@ class AdaptationEngine:
 
             return action
 
-        # --------------------------------------------------
-        # CMA-ES
-        # --------------------------------------------------
+        # cma-es
 
         if hasattr(
             optimizer,
@@ -429,9 +409,7 @@ class AdaptationEngine:
 
             return action
 
-        # --------------------------------------------------
-        # NELDER-MEAD
-        # --------------------------------------------------
+        # nelder-mead
 
         if hasattr(
             optimizer,
@@ -457,9 +435,7 @@ class AdaptationEngine:
 
             return action
 
-        # --------------------------------------------------
-        # GENERIC FALLBACK
-        # --------------------------------------------------
+        # generic fallback
 
         action = {
             "action": (
@@ -480,9 +456,7 @@ class AdaptationEngine:
 
         return action
 
-    # ======================================================
-    # HISTORY
-    # ======================================================
+    # history
 
     def get_history(self):
 
@@ -490,9 +464,7 @@ class AdaptationEngine:
             self.actions_taken
         )
 
-    # ======================================================
-    # RESET
-    # ======================================================
+    # reset
 
     def reset(self):
 

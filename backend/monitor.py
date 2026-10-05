@@ -17,9 +17,7 @@ class ConvergenceMonitor:
 
         self.history = []
 
-    # ==================================================
-    # ANALYZE OPTIMIZER HISTORY
-    # ==================================================
+    # analyze optimizer history
 
     def analyze_history(self, history):
 
@@ -85,9 +83,7 @@ class ConvergenceMonitor:
             "trend": trend,
         }
 
-    # ==================================================
-    # RESET
-    # ==================================================
+    # reset
 
     def reset(self, best_score=float("inf")):
 
