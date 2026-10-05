@@ -1,5 +1,5 @@
 # OptiAgent 🧠⚡
-
+ 
 ## An Autonomous Agentic Optimization System
 > **A project by a student exploring AI-driven numerical optimization**
 
