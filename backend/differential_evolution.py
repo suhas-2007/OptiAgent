@@ -18,6 +18,7 @@ class DifferentialEvolution:
         bounds,
         population_size=30,
         seed=123,
+        initial_position=None,
     ):
         self.objective_function = objective_function
         self.dimensions = dimensions
@@ -35,7 +36,7 @@ class DifferentialEvolution:
 
         # optional global-best seed
 
-        self.initial_position = None
+        self.initial_position = initial_position
 
         # initial population
 

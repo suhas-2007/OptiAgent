@@ -17,10 +17,21 @@ class AIPlanner:
 
     def __init__(
         self,
-        algorithms,
+        algorithms=None,
         model=None,
         api_key=None,
     ):
+
+        if algorithms is None:
+            algorithms = [
+                "PSO",
+                "Differential Evolution",
+                "Genetic Algorithm",
+                "Simulated Annealing",
+                "Hill Climbing",
+                "CMA-ES",
+                "Nelder-Mead",
+            ]
 
         if not algorithms:
             raise ValueError(
@@ -568,11 +579,8 @@ confidence
         ]
 
         if not available:
-
-            raise RuntimeError(
-                "No optimizer remains after applying "
-                "strategy exclusion."
-            )
+            # If all algorithms were excluded (e.g. only 1 algorithm available), fall back to full pool
+            available = list(self.algorithms)
 
         # detect function type
 
@@ -1405,15 +1413,18 @@ confidence
         )
 
         if selected not in self.algorithms:
-
-            raise RuntimeError(
-                "Strategy planner selected "
-                f"an unavailable optimizer: "
-                f"{selected}"
+            matched = next(
+                (a for a in self.algorithms if a.strip().lower() == str(selected).strip().lower()),
+                None,
             )
+            if matched:
+                selected = matched
+                recommendation["recommended_strategy"] = matched
+            else:
+                selected = self.algorithms[0]
+                recommendation["recommended_strategy"] = selected
 
         # enforce exclusion
-
         if (
             avoid_strategy
             and
@@ -1423,12 +1434,16 @@ confidence
                 avoid_strategy
             ).strip().lower()
         ):
-
-            raise RuntimeError(
-                f"Strategy '{selected}' is "
-                f"explicitly excluded because "
-                f"'{avoid_strategy}' stagnated."
-            )
+            alternatives = [
+                a for a in self.algorithms
+                if a.strip().lower() != str(avoid_strategy).strip().lower()
+            ]
+            if alternatives:
+                selected = alternatives[0]
+                recommendation["recommended_strategy"] = selected
+                recommendation["reason"] = (
+                    f"Switched from {avoid_strategy} to {selected} to escape stagnation."
+                )
 
         # confidence
 

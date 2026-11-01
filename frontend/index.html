@@ -3,696 +3,553 @@
 
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>OptiAgent — Autonomous Optimization</title>
-
+    <meta name="description" content="OptiAgent — Autonomous Agentic Numerical Optimization Studio with Dynamic Multi-Stage AI Reasoning and Validation">
+    <title>OptiAgent — Autonomous Optimization Studio</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <!-- top bar -->
-
+    <!-- Top Navigation Bar -->
     <header class="topbar">
-
-        <div class="brand">
-
-            <div class="brand-icon">
-                OA
+        <a href="#" class="brand">
+            <div class="brand-icon">OA</div>
+            <div class="brand-meta">
+                <h1>
+                    OptiAgent
+                    <span class="version-pill">v1.0</span>
+                </h1>
+                <p>Autonomous Dynamic Optimization</p>
             </div>
+        </a>
 
-            <div>
-                <h1>OptiAgent</h1>
+        <div class="topbar-actions">
+            <button id="architectureModalBtn" type="button" class="nav-link-btn" title="View System Architecture">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <span>How It Works</span>
+            </button>
 
-                <p>
-                    Autonomous Dynamic Optimization
-                </p>
+            <div id="connectionStatus" class="connection offline" role="status" aria-live="polite">
+                ● API Offline
             </div>
-
         </div>
-
-        <div id="connectionStatus" class="connection offline">
-            ● API Offline
-        </div>
-
     </header>
 
 
-    <!-- main -->
-
+    <!-- Main Application Container -->
     <main class="container">
 
-
-        <!-- hero -->
-
+        <!-- Hero Strip -->
         <section class="hero">
-
-            <div class="eyebrow">
-                AGENTIC AI OPTIMIZATION
+            <div class="hero-main">
+                <div class="eyebrow">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    Autonomous Agentic Cycle
+                </div>
+                <h2>Adaptive Numerical <span>Optimization Studio</span></h2>
+                <p>
+                    OptiAgent analyzes continuous mathematical landscapes, autonomously selects appropriate optimization strategies, 
+                    monitors real-time convergence, validates solutions independently, and adapts hyperparameters dynamically.
+                </p>
             </div>
-
-            <h2>
-                Let the agent choose
-                <span>how to optimize.</span>
-            </h2>
-
-            <p>
-                OptiAgent analyzes your objective, selects an
-                optimization strategy, executes it, validates
-                the result, monitors convergence, and adapts
-                when necessary.
-            </p>
-
+            <div class="hero-badge-strip">
+                <span class="spec-badge">Engine: <strong>Gemini AFC + Fallback</strong></span>
+                <span class="spec-badge">Optimizers: <strong>8 Algorithmic Classes</strong></span>
+                <span class="spec-badge">Verifier: <strong>Independent AST Validator</strong></span>
+            </div>
         </section>
 
 
-        <!-- pipeline -->
-
-        <section class="pipeline-card">
-
-            <div class="label">
-                AGENT LOOP
+        <!-- Autonomous Decision Pipeline Stepper -->
+        <section class="pipeline-card" aria-label="Agent Execution Pipeline">
+            <div class="pipeline-header">
+                <h3>Autonomous Closed-Loop Pipeline</h3>
+                <span class="pipeline-legend">Real-Time Stage Telemetry</span>
             </div>
-
-            <h3>
-                Autonomous Decision Pipeline
-            </h3>
 
             <div class="pipeline">
-
-                <div id="pipelineObserve" class="pipeline-step active">
-                    <span>01</span>
+                <div id="pipelineObserve" class="pipeline-step active" data-step="observe">
+                    <div class="step-meta">
+                        <span class="step-number">01</span>
+                        <span class="step-indicator"></span>
+                    </div>
                     <strong>Observe</strong>
+                    <span class="step-subtext">Inspect space & bounds</span>
                 </div>
 
-                <div class="arrow">→</div>
+                <div class="step-arrow">→</div>
 
-                <div id="pipelineReason" class="pipeline-step">
-                    <span>02</span>
+                <div id="pipelineReason" class="pipeline-step" data-step="reason">
+                    <div class="step-meta">
+                        <span class="step-number">02</span>
+                        <span class="step-indicator"></span>
+                    </div>
                     <strong>Reason</strong>
+                    <span class="step-subtext">Analyze landscape</span>
                 </div>
 
-                <div class="arrow">→</div>
+                <div class="step-arrow">→</div>
 
-                <div id="pipelineDecide" class="pipeline-step">
-                    <span>03</span>
+                <div id="pipelineDecide" class="pipeline-step" data-step="decide">
+                    <div class="step-meta">
+                        <span class="step-number">03</span>
+                        <span class="step-indicator"></span>
+                    </div>
                     <strong>Decide</strong>
+                    <span class="step-subtext">Select optimizer</span>
                 </div>
 
-                <div class="arrow">→</div>
+                <div class="step-arrow">→</div>
 
-                <div id="pipelineAct" class="pipeline-step">
-                    <span>04</span>
+                <div id="pipelineAct" class="pipeline-step" data-step="act">
+                    <div class="step-meta">
+                        <span class="step-number">04</span>
+                        <span class="step-indicator"></span>
+                    </div>
                     <strong>Act</strong>
+                    <span class="step-subtext">Execute search stage</span>
                 </div>
 
-                <div class="arrow">→</div>
+                <div class="step-arrow">→</div>
 
-                <div id="pipelineValidate" class="pipeline-step">
-                    <span>05</span>
+                <div id="pipelineValidate" class="pipeline-step" data-step="validate">
+                    <div class="step-meta">
+                        <span class="step-number">05</span>
+                        <span class="step-indicator"></span>
+                    </div>
                     <strong>Validate</strong>
+                    <span class="step-subtext">Verify bounds & score</span>
                 </div>
 
-                <div class="arrow">→</div>
+                <div class="step-arrow">→</div>
 
-                <div id="pipelineAdapt" class="pipeline-step">
-                    <span>06</span>
+                <div id="pipelineAdapt" class="pipeline-step" data-step="adapt">
+                    <div class="step-meta">
+                        <span class="step-number">06</span>
+                        <span class="step-indicator"></span>
+                    </div>
                     <strong>Adapt</strong>
+                    <span class="step-subtext">Self-correct if trapped</span>
                 </div>
-
             </div>
-
         </section>
 
 
-        <!-- dashboard -->
-
+        <!-- Two-Column Workbench Grid -->
         <div class="dashboard-grid">
 
+            <!-- LEFT COLUMN: Problem Definition & Search Space -->
+            <div class="setup-column">
 
-            <!-- left - optimization setup -->
-
-            <section class="card">
-
-                <div class="card-header">
-
-                    <div>
-
-                        <div class="label">
-                            PROBLEM
-                        </div>
-
-                        <h3>
-                            Optimization Setup
-                        </h3>
-
-                    </div>
-
-                </div>
-
-
-                <!-- SMART INPUT: PICTURE OR NAME -->
-                <div class="smart-input-box">
-                    <div class="smart-input-header">
-                        <span class="smart-badge">NEW</span>
-                        <span class="smart-title">Paste Question Picture or Type Function Name</span>
-                    </div>
-
-                    <div class="smart-search-row">
-                        <input id="smartFunctionQuery" type="text" placeholder='Type name e.g. "nelder mead function", "rosenbrock", "ackley"...' autocomplete="off">
-                        <button id="identifyButton" type="button" class="secondary-btn">
-                            <span id="identifyBtnText">Identify</span>
-                            <span id="identifyBtnLoader" class="loader hidden"></span>
-                        </button>
-                    </div>
-
-                    <div id="dropZone" class="paste-zone">
-                        <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
-                        <div id="dropZonePrompt" class="paste-zone-prompt">
-                            <span class="paste-icon">📋</span>
-                            <span><strong>Paste question screenshot (Ctrl+V)</strong> or click to upload picture</span>
-                        </div>
-                        <div id="imagePreviewContainer" class="image-preview-container hidden">
-                            <img id="imagePreview" src="" alt="Pasted Question Preview">
-                            <button id="removeImageBtn" type="button" class="remove-img-btn" title="Remove image">✕</button>
+                <section class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <span class="label">PROBLEM FORMULATION</span>
+                            <h3>Optimization Setup</h3>
+                            <span class="card-subtitle">Define objective, dimension constraints, and variable bounds</span>
                         </div>
                     </div>
 
-                    <div id="extractionStatus" class="extraction-status hidden"></div>
-                </div>
+                    <!-- Smart Input: Screenshot OCR or Function Search -->
+                    <div class="smart-input-box">
+                        <div class="smart-input-header">
+                            <div class="smart-badge-group">
+                                <span class="smart-badge">SMART OCR</span>
+                                <span class="smart-title">Paste Screenshot or Name</span>
+                            </div>
+                            <span class="smart-hint">Ctrl+V anywhere to paste</span>
+                        </div>
 
-                <!-- OBJECTIVE -->
+                        <div class="smart-search-row">
+                            <input id="smartFunctionQuery" type="text" placeholder='Type benchmark e.g. "rosenbrock", "ackley", "rastrigin"...' autocomplete="off">
+                            <button id="identifyButton" type="button" class="secondary-btn">
+                                <span id="identifyBtnText">Identify</span>
+                                <span id="identifyBtnLoader" class="loader hidden"></span>
+                            </button>
+                        </div>
 
+                        <div id="dropZone" class="paste-zone" tabindex="0" role="button" aria-label="Drop screenshot or click to upload">
+                            <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
+                            <div id="dropZonePrompt" class="paste-zone-prompt">
+                                <span class="paste-icon">📷</span>
+                                <span><strong>Paste problem screenshot (<span class="kbd-shortcut">Ctrl+V</span>)</strong> or click to upload</span>
+                            </div>
+                            <div id="imagePreviewContainer" class="image-preview-container hidden">
+                                <img id="imagePreview" src="" alt="Pasted Question Preview">
+                                <button id="removeImageBtn" type="button" class="remove-img-btn" title="Remove image">✕</button>
+                            </div>
+                        </div>
 
-                <label for="objective">
-                    Objective Function
-                </label>
-
-                <input id="objective" type="text" value="x1**2 + x2**2" autocomplete="off">
-
-
-                <div class="examples">
-
-                    <button type="button" onclick="setExample('sphere')">
-                        Quadratic
-                    </button>
-
-                    <button type="button" onclick="setExample('shifted')">
-                        Shifted
-                    </button>
-
-                    <button type="button" onclick="setExample('trigonometric')">
-                        Trigonometric
-                    </button>
-
-                    <button type="button" onclick="setExample('rosenbrock')">
-                        Rosenbrock
-                    </button>
-
-                    <button type="button" onclick="setExample('rastrigin')">
-                        Rastrigin
-                    </button>
-
-                    <button type="button" onclick="setExample('ackley')">
-                        Ackley
-                    </button>
-
-                </div>
+                        <div id="extractionStatus" class="extraction-status hidden" role="status"></div>
+                    </div>
 
 
-                <!-- DIMENSIONS -->
-
-                <label for="dimensions">
-                    Number of Dimensions
-                </label>
-
-                <input id="dimensions" type="number" value="2" min="1" max="20">
-
-
-                <!-- STAGES / PATIENCE -->
-
-                <div class="metrics">
-
-                    <div>
-
-                        <label for="maxStages">
-                            Maximum Stages
+                    <!-- Objective Function Input -->
+                    <div class="form-group">
+                        <label for="objective">
+                            <span>Objective Function $f(x)$</span>
+                            <span class="label-hint">Python math syntax (x1, x2...)</span>
                         </label>
-
-                        <input id="maxStages" type="number" value="5" min="1" max="20">
-
+                        <input id="objective" class="code-input" type="text" value="x1**2 + x2**2" autocomplete="off" spellcheck="false">
                     </div>
 
-                    <div>
+                    <!-- Benchmark Examples -->
+                    <div class="preset-section">
+                        <div class="preset-header">Benchmark Presets:</div>
+                        <div class="examples">
+                            <button type="button" onclick="setExample('sphere')" title="Convex smooth quadratic test">Sphere</button>
+                            <button type="button" onclick="setExample('rosenbrock')" title="Narrow curved valley test (Nelder-Mead benchmark)">Rosenbrock</button>
+                            <button type="button" onclick="setExample('rastrigin')" title="Highly multimodal with regular local traps">Rastrigin</button>
+                            <button type="button" onclick="setExample('ackley')" title="Multimodal with nearly flat outer regions">Ackley</button>
+                            <button type="button" onclick="setExample('shifted')" title="Shifted quadratic off-origin test">Shifted</button>
+                            <button type="button" onclick="setExample('trigonometric')" title="Oscillating periodic test">Trigonometric</button>
+                            <button type="button" onclick="setExample('beale')" title="Multimodal 2D with sharp peaks">Beale</button>
+                            <button type="button" onclick="setExample('booth')" title="Quadratic plate function">Booth</button>
+                            <button type="button" onclick="setExample('himmelblau')" title="4 identical global minima">Himmelblau</button>
+                        </div>
+                    </div>
 
-                        <label for="patience">
-                            Patience
+
+                    <!-- Search Parameters Grid -->
+                    <div class="parameters-grid">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="dimensions">
+                                <span>Dimensions</span>
+                                <span class="label-hint">1–50</span>
+                            </label>
+                            <input id="dimensions" type="number" value="2" min="1" max="50">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="maxStages">
+                                <span>Max Stages</span>
+                                <span class="label-hint">1–20</span>
+                            </label>
+                            <input id="maxStages" type="number" value="5" min="1" max="20">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="patience">
+                                <span>Patience</span>
+                                <span class="label-hint">1–20</span>
+                            </label>
+                            <input id="patience" type="number" value="3" min="1" max="20">
+                        </div>
+                    </div>
+
+
+                    <!-- Variable Bounds Table -->
+                    <div class="form-group" style="margin-top:14px; margin-bottom:0;">
+                        <label>
+                            <span>Search Space Bounds $[x_{min}, x_{max}]$</span>
+                            <span class="label-hint">Auto-scales with dimension</span>
                         </label>
-
-                        <input id="patience" type="number" value="3" min="1" max="20">
-
+                        <div class="bounds-table-wrapper">
+                            <div class="bounds-table-header">
+                                <span>Var</span>
+                                <span>Lower Bound</span>
+                                <span>Upper Bound</span>
+                            </div>
+                            <div id="boundsContainer" class="bounds-container">
+                                <div class="bound-row">
+                                    <div class="bound-label">x1</div>
+                                    <input id="lowerBound1" class="lower-bound" data-index="1" type="number" value="-10" step="any">
+                                    <input id="upperBound1" class="upper-bound" data-index="1" type="number" value="10" step="any">
+                                </div>
+                                <div class="bound-row">
+                                    <div class="bound-label">x2</div>
+                                    <input id="lowerBound2" class="lower-bound" data-index="2" type="number" value="-10" step="any">
+                                    <input id="upperBound2" class="upper-bound" data-index="2" type="number" value="10" step="any">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
+
+                    <!-- Primary Trigger CTA -->
+                    <button id="optimizeButton" class="primary-button" type="button">
+                        <span id="buttonText">Run OptiAgent</span>
+                        <span id="buttonLoader" class="loader hidden"></span>
+                    </button>
+
+                </section>
+
+
+                <!-- Error Message Banner -->
+                <div id="errorMessage" class="reason-box hidden" role="alert">
+                    <strong>Optimization could not be completed</strong>
+                    <p id="errorText"></p>
                 </div>
 
+            </div>
 
-                <!-- BOUNDS -->
 
-                <label>
-                    Variable Bounds
-                </label>
+            <!-- RIGHT COLUMN: Agent Reasoning, Telemetry & Results -->
+            <div class="results-column">
 
-                <div id="boundsContainer" class="bounds-container">
+                <!-- AI Brain & Strategy Decision Card -->
+                <section class="card ai-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <span class="label">AGENT REASONING ENGINE</span>
+                            <h3>Strategy Decision</h3>
+                            <span class="card-subtitle">AI model recommendation based on landscape topology</span>
+                        </div>
+                        <span id="agentBadge" class="badge">IDLE</span>
+                    </div>
 
-                    <div class="bound-row">
+                    <div class="strategy-box">
+                        <span>SELECTED STRATEGY</span>
+                        <strong id="strategy">—</strong>
+                    </div>
 
-                        <div class="bound-label">
-                            x1
+                    <div class="metrics">
+                        <div class="metric">
+                            <span>Strategic Confidence</span>
+                            <strong id="confidence">—</strong>
+                        </div>
+                        <div class="metric">
+                            <span>Exploration Balance</span>
+                            <strong id="exploration">—</strong>
+                        </div>
+                    </div>
+
+                    <div class="reason-box">
+                        <span>AI REASONING LOG</span>
+                        <p id="reason">The agent will observe the search space, evaluate mathematical characteristics, and dispatch an optimal algorithm.</p>
+                    </div>
+                </section>
+
+
+                <!-- Best Solution Results Card -->
+                <section class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <span class="label">OPTIMAL CONVERGENCE</span>
+                            <h3>Best Solution</h3>
+                            <span class="card-subtitle">Verified global minimum coordinates and score</span>
+                        </div>
+                    </div>
+
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <div class="result-item-header">
+                                <span>Best Score $f(x^*)$</span>
+                                <button type="button" class="copy-mini-btn" onclick="copyScore()" title="Copy score">Copy</button>
+                            </div>
+                            <strong id="bestScore" class="highlight-score">—</strong>
                         </div>
 
-                        <input id="lowerBound1" type="number" value="-10">
-
-                        <input id="upperBound1" type="number" value="10">
-
-                    </div>
-
-
-                    <div class="bound-row">
-
-                        <div class="bound-label">
-                            x2
+                        <div class="result-item">
+                            <div class="result-item-header">
+                                <span>Best Coordinates $x^*$</span>
+                                <button type="button" class="copy-mini-btn" onclick="copyPosition()" title="Copy coordinates">Copy</button>
+                            </div>
+                            <strong id="bestPosition">—</strong>
                         </div>
 
-                        <input id="lowerBound2" type="number" value="-10">
-
-                        <input id="upperBound2" type="number" value="10">
-
-                    </div>
-
-                </div>
-
-
-                <!-- RUN -->
-
-                <button id="optimizeButton" class="primary-button" type="button">
-
-                    <span id="buttonText">
-                        Run OptiAgent
-                    </span>
-
-                    <span id="buttonLoader" class="loader hidden"></span>
-
-                </button>
-
-            </section>
-
-
-
-            <!-- right - ai brain -->
-
-            <section class="card ai-card">
-
-                <div class="card-header">
-
-                    <div>
-
-                        <div class="label">
-                            AI BRAIN
+                        <div class="result-item">
+                            <span>Stages Executed</span>
+                            <strong id="stageCount">—</strong>
                         </div>
 
-                        <h3>
-                            Strategy Decision
-                        </h3>
+                        <div class="result-item">
+                            <span>Strategies Used</span>
+                            <strong id="strategyCount">—</strong>
+                        </div>
+                    </div>
+                </section>
 
+
+                <!-- Live Agent Activity Feed -->
+                <section id="activitySection" class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <span class="label">EXECUTION LOG</span>
+                            <h3>Agent Activity</h3>
+                            <span class="card-subtitle">Live events dispatched during the optimization loop</span>
+                        </div>
+                        <span id="activityStatus" class="small-status">Waiting</span>
                     </div>
 
-                    <span id="agentBadge" class="badge">
-                        IDLE
-                    </span>
-
-                </div>
-
-
-                <!-- SELECTED STRATEGY -->
-
-                <div class="strategy-box">
-
-                    <span>
-                        SELECTED STRATEGY
-                    </span>
-
-                    <strong id="strategy">
-                        —
-                    </strong>
-
-                </div>
+                    <div id="activityList" class="history-list" aria-live="polite">
+                        <div class="empty-state">
+                            Run OptiAgent to stream live agent activity.
+                        </div>
+                    </div>
+                </section>
 
 
-                <!-- CONFIDENCE / EXPLORATION -->
-
-                <div class="metrics">
-
-                    <div class="metric">
-
-                        <span>
-                            Confidence
-                        </span>
-
-                        <strong id="confidence">
-                            —
-                        </strong>
-
+                <!-- Multi-Stage Strategy History -->
+                <section class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <span class="label">ADAPTATION HISTORY</span>
+                            <h3>Stage History</h3>
+                            <span class="card-subtitle">Multi-stage progression and algorithm transitions</span>
+                        </div>
                     </div>
 
-
-                    <div class="metric">
-
-                        <span>
-                            Exploration
-                        </span>
-
-                        <strong id="exploration">
-                            —
-                        </strong>
-
+                    <div id="strategyHistory" class="history-list">
+                        <div class="empty-state">
+                            No optimization stages executed yet.
+                        </div>
                     </div>
+                </section>
 
-                </div>
-
-
-                <!-- REASON -->
-
-                <div class="reason-box">
-
-                    <span>
-                        AI REASONING
-                    </span>
-
-                    <p id="reason">
-                        The agent will analyze your problem
-                        and provide a strategy recommendation
-                        with reasoning.
-                    </p>
-
-                </div>
-
-            </section>
+            </div>
 
         </div>
 
 
-        <!-- error -->
+        <!-- Bottom Analytical Section: Convergence Curve & AI Tutor -->
+        <div class="analytics-section">
 
-        <div id="errorMessage" class="reason-box hidden" style="margin-top:22px;">
+            <!-- Convergence Performance Chart -->
+            <section class="card convergence-card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <span class="label">PERFORMANCE TELEMETRY</span>
+                        <h3>Convergence Curve</h3>
+                        <span class="card-subtitle">Objective function value vs. iteration count</span>
+                    </div>
+                    <span id="convergenceStatus" class="small-status">No data yet</span>
+                </div>
 
-            <strong>
-                Optimization could not be completed
-            </strong>
+                <div class="chart-container">
+                    <canvas id="convergenceChart"></canvas>
+                    <div id="chartEmpty" class="chart-empty">
+                        <div>
+                            <strong>No convergence telemetry yet.</strong>
+                            Run optimization to visualize the iteration trajectory.
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-            <p id="errorText"></p>
+
+            <!-- Interactive AI Behavior Tutor -->
+            <section class="card ask-ai-card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <span class="label">AI BEHAVIOR TUTOR</span>
+                        <h3>Algorithm & Function Insights</h3>
+                        <span class="card-subtitle">Ask questions about how algorithms navigate landscapes</span>
+                    </div>
+                    <span class="badge">INTERACTIVE</span>
+                </div>
+
+                <p class="section-desc">
+                    Curious why Nelder-Mead succeeded, how stagnation was detected, or why local minima trap optimizers?
+                </p>
+
+                <div class="quick-prompts">
+                    <button type="button" class="prompt-chip" onclick="askQuickPrompt('How does Nelder-Mead behave?')">
+                        How does Nelder-Mead behave?
+                    </button>
+                    <button type="button" class="prompt-chip" onclick="askQuickPrompt('How does this objective function behave?')">
+                        How does this function behave?
+                    </button>
+                    <button type="button" class="prompt-chip" onclick="askQuickPrompt('Why do local minima trap optimization algorithms?')">
+                        Why do local minima trap algorithms?
+                    </button>
+                    <button type="button" class="prompt-chip" onclick="askQuickPrompt('Explain how the selected optimizer works')">
+                        Explain selected optimizer
+                    </button>
+                </div>
+
+                <div class="ask-input-row">
+                    <input id="askQuestionInput" type="text" placeholder="e.g. Why did it adapt? How does CMA-ES work?" autocomplete="off">
+                    <button id="askButton" type="button" class="primary-button-small">
+                        <span id="askButtonText">Ask Info</span>
+                        <span id="askButtonLoader" class="loader hidden"></span>
+                    </button>
+                </div>
+
+                <div id="askAnswerContainer" class="reason-box hidden" style="margin-top:14px;" role="region" aria-live="polite">
+                    <div class="answer-header">
+                        <strong>AI Behavior Explanation</strong>
+                        <span id="answerSource" class="small-tag">Gemini</span>
+                    </div>
+                    <p id="askAnswerText"></p>
+                </div>
+            </section>
 
         </div>
-
-
-        <!-- live agent activity -->
-
-        <section id="activitySection" class="card" style="margin-top:22px;">
-
-            <div class="card-header">
-
-                <div>
-
-                    <div class="label">
-                        LIVE AGENT
-                    </div>
-
-                    <h3>
-                        Agent Activity
-                    </h3>
-
-                </div>
-
-                <span id="activityStatus" class="small-status">
-                    Waiting
-                </span>
-
-            </div>
-
-
-            <div id="activityList" class="history-list">
-
-                <div class="empty-state">
-                    Run OptiAgent to see agent activity.
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- result -->
-
-        <section class="card" style="margin-top:22px;">
-
-            <div class="card-header">
-
-                <div>
-
-                    <div class="label">
-                        RESULT
-                    </div>
-
-                    <h3>
-                        Best Solution
-                    </h3>
-
-                </div>
-
-            </div>
-
-
-            <div class="result-grid">
-
-                <div class="result-item">
-
-                    <span>
-                        Best Score
-                    </span>
-
-                    <strong id="bestScore">
-                        —
-                    </strong>
-
-                </div>
-
-
-                <div class="result-item">
-
-                    <span>
-                        Best Position
-                    </span>
-
-                    <strong id="bestPosition">
-                        —
-                    </strong>
-
-                </div>
-
-
-                <div class="result-item">
-
-                    <span>
-                        Stages
-                    </span>
-
-                    <strong id="stageCount">
-                        —
-                    </strong>
-
-                </div>
-
-
-                <div class="result-item">
-
-                    <span>
-                        Strategies
-                    </span>
-
-                    <strong id="strategyCount">
-                        —
-                    </strong>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- strategy history -->
-
-        <section class="card" style="margin-top:22px;">
-
-            <div class="card-header">
-
-                <div>
-
-                    <div class="label">
-                        ADAPTATION
-                    </div>
-
-                    <h3>
-                        Strategy History
-                    </h3>
-
-                </div>
-
-            </div>
-
-
-            <div id="strategyHistory" class="history-list">
-
-                <div class="empty-state">
-                    No optimization runs yet.
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- convergence -->
-
-        <section class="card convergence-card">
-
-            <div class="card-header">
-
-                <div>
-
-                    <div class="label">
-                        PERFORMANCE
-                    </div>
-
-                    <h3>
-                        Convergence
-                    </h3>
-
-                </div>
-
-                <span id="convergenceStatus" class="small-status">
-                    No data yet
-                </span>
-
-            </div>
-
-
-            <div class="chart-container">
-
-                <canvas id="convergenceChart"></canvas>
-
-                <div id="chartEmpty" class="chart-empty">
-
-                    <div>
-                        <strong>
-                            No data yet.
-                        </strong>
-
-                        <br>
-
-                        Run optimization to see
-                        convergence.
-                    </div>
-
-                </div>
-
-            </div>
-
-        <!-- ask optiagent: function & optimizer behavior -->
-
-        <section class="card ask-ai-card" style="margin-top:22px;">
-
-            <div class="card-header">
-                <div>
-                    <div class="label">
-                        AI BEHAVIOR TUTOR
-                    </div>
-                    <h3>
-                        Ask About Function or Optimizer Behavior
-                    </h3>
-                </div>
-                <span class="badge">
-                    INTERACTIVE
-                </span>
-            </div>
-
-            <p class="section-desc">
-                Curious how Nelder-Mead works, why the algorithm adapted, or how a function behaves? Ask any question below:
-            </p>
-
-            <div class="quick-prompts">
-                <button type="button" class="prompt-chip" onclick="askQuickPrompt('How does Nelder-Mead behave?')">
-                    How does Nelder-Mead behave?
-                </button>
-                <button type="button" class="prompt-chip" onclick="askQuickPrompt('How does this objective function behave?')">
-                    How does this function behave?
-                </button>
-                <button type="button" class="prompt-chip" onclick="askQuickPrompt('Why do local minima trap optimization algorithms?')">
-                    Why do local minima trap algorithms?
-                </button>
-                <button type="button" class="prompt-chip" onclick="askQuickPrompt('Explain how the selected optimizer works')">
-                    Explain selected optimizer
-                </button>
-            </div>
-
-            <div class="ask-input-row">
-                <input id="askQuestionInput" type="text" placeholder="e.g. How does Nelder-Mead behave? Why did it choose this strategy?" autocomplete="off">
-                <button id="askButton" type="button" class="primary-button-small">
-                    <span id="askButtonText">Ask Info</span>
-                    <span id="askButtonLoader" class="loader hidden"></span>
-                </button>
-            </div>
-
-            <div id="askAnswerContainer" class="reason-box hidden" style="margin-top:16px;">
-                <div class="answer-header">
-                    <strong>AI Behavior Explanation</strong>
-                    <span id="answerSource" class="small-tag">Gemini</span>
-                </div>
-                <p id="askAnswerText"></p>
-            </div>
-
-        </section>
 
     </main>
 
 
+    <!-- Architecture Modal Dialog -->
+    <div id="archModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="archModalTitle">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 id="archModalTitle">OptiAgent System Architecture</h3>
+                <button id="closeArchModalBtn" type="button" class="modal-close-btn" aria-label="Close modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:12px; color:var(--text-secondary); margin-bottom:16px;">
+                    OptiAgent operates an autonomous closed-loop agent cycle. Instead of statically choosing an optimizer, 
+                    the agent reasons over problem features, executes multi-stage numerical passes, validates results, 
+                    and dynamically adapts when stagnation is detected.
+                </p>
 
-    <!-- footer -->
+                <div class="arch-flow-grid">
+                    <div class="arch-node">
+                        <strong>1. Observe</strong>
+                        <p>Safe AST parsing extracts variables, validates dimensionality, and checks numerical bounds.</p>
+                    </div>
+                    <div class="arch-node">
+                        <strong>2. Reason</strong>
+                        <p>AI evaluates multimodal landscape ruggedness, curvature, and previous stage convergence slope.</p>
+                    </div>
+                    <div class="arch-node">
+                        <strong>3. Decide</strong>
+                        <p>Autonomous selection from 8 optimizer classes (CMA-ES, PSO, Nelder-Mead, GA, SA, etc.).</p>
+                    </div>
+                    <div class="arch-node">
+                        <strong>4. Act</strong>
+                        <p>Execute numerical stage with dynamically tuned population and step parameters.</p>
+                    </div>
+                    <div class="arch-node">
+                        <strong>5. Validate</strong>
+                        <p>Independent mathematical re-computation verifies bounds compliance and objective accuracy.</p>
+                    </div>
+                    <div class="arch-node">
+                        <strong>6. Adapt</strong>
+                        <p>Stagnation monitor triggers parameter reconfiguration or shifts algorithm class if trapped.</p>
+                    </div>
+                </div>
 
+                <div style="font-size:11px; font-family:var(--font-mono); color:var(--text-dim); border-top:1px solid var(--border-subtle); padding-top:12px;">
+                    Powered by Google Gemini Automatic Function Calling (AFC) with intelligent local mathematical fallback.
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Footer -->
     <footer>
-
-        <div>
-            <strong>
-                OptiAgent v1.0
-            </strong>
-
-            <br>
-
-            Autonomous Dynamic Optimization
+        <div class="footer-brand">
+            <strong>OptiAgent Studio v1.0</strong> — Autonomous Dynamic Numerical Optimization
         </div>
-
-        <div>
-            Built for intelligent optimization
-            <br>
-            Hackathon Project
+        <div class="footer-links">
+            <a href="https://github.com/suhas-2007/OptiAgent" target="_blank" rel="noopener">GitHub Repository</a>
+            <span>•</span>
+            <a href="https://optiagent-272474227005.asia-south1.run.app" target="_blank" rel="noopener">REST API Status</a>
         </div>
-
     </footer>
 
 
-    <!-- javascript -->
-
+    <!-- JavaScript Execution Engine -->
     <script src="app.js"></script>
 
 </body>

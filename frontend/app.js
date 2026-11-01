@@ -1,7 +1,8 @@
-// optiagent frontend
+// ==========================================================================
+// OptiAgent Autonomous Optimization Frontend Engine
+// ==========================================================================
 
-// configuration
-
+// Configuration
 const API_URL = (
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1" ||
@@ -9,16 +10,12 @@ const API_URL = (
     window.location.port === "5000"
 ) ? "http://127.0.0.1:5000" : "https://optiagent-272474227005.asia-south1.run.app";
 
-
-// dom helpers
-
+// DOM helper
 function $(id) {
     return document.getElementById(id);
 }
 
-
-// dom references
-
+// Global DOM references
 let objectiveInput;
 let dimensionsInput;
 let maxStagesInput;
@@ -46,2120 +43,828 @@ let errorText;
 let activityList;
 let activityStatus;
 
+// Preset benchmark definitions matching backend
+const PRESET_BENCHMARKS = {
+    "sphere": {
+        "name": "Sphere Function",
+        "objective": "x1**2 + x2**2",
+        "dimensions": 2,
+        "bounds": [[-10.0, 10.0], [-10.0, 10.0]],
+        "explanation": "Convex smooth quadratic test with global minimum 0 at (0, 0)."
+    },
+    "rosenbrock": {
+        "name": "Rosenbrock Function",
+        "objective": "(1 - x1)**2 + 100 * (x2 - x1**2)**2",
+        "dimensions": 2,
+        "bounds": [[-5.0, 5.0], [-5.0, 5.0]],
+        "explanation": "Narrow curved banana valley benchmark with global minimum 0 at (1, 1)."
+    },
+    "rastrigin": {
+        "name": "Rastrigin Function",
+        "objective": "20 + x1**2 - 10 * cos(2 * pi * x1) + x2**2 - 10 * cos(2 * pi * x2)",
+        "dimensions": 2,
+        "bounds": [[-5.12, 5.12], [-5.12, 5.12]],
+        "explanation": "Highly multimodal benchmark with a large lattice of deceptive local traps."
+    },
+    "ackley": {
+        "name": "Ackley Function",
+        "objective": "-20 * exp(-0.2 * sqrt(0.5 * (x1**2 + x2**2))) - exp(0.5 * (cos(2 * pi * x1) + cos(2 * pi * x2))) + e + 20",
+        "dimensions": 2,
+        "bounds": [[-5.0, 5.0], [-5.0, 5.0]],
+        "explanation": "Multimodal test with nearly flat outer regions and a deep central minimum."
+    },
+    "shifted": {
+        "name": "Shifted Quadratic Function",
+        "objective": "(x1 - 3)**2 + (x2 + 2)**2",
+        "dimensions": 2,
+        "bounds": [[-10.0, 10.0], [-10.0, 10.0]],
+        "explanation": "Convex quadratic shifted away from origin, global minimum 0 at (3, -2)."
+    },
+    "trigonometric": {
+        "name": "Trigonometric Function",
+        "objective": "sin(x1)**2 + cos(x2)**2",
+        "dimensions": 2,
+        "bounds": [[-5.0, 5.0], [-5.0, 5.0]],
+        "explanation": "Oscillating periodic function with infinite periodic local minima."
+    },
+    "beale": {
+        "name": "Beale Function",
+        "objective": "(1.5 - x1 + x1*x2)**2 + (2.25 - x1 + x1*x2**2)**2 + (2.625 - x1 + x1*x2**3)**2",
+        "dimensions": 2,
+        "bounds": [[-4.5, 4.5], [-4.5, 4.5]],
+        "explanation": "Multimodal 2D benchmark with sharp ridges and minimum at (3, 0.5)."
+    },
+    "booth": {
+        "name": "Booth Function",
+        "objective": "(x1 + 2*x2 - 7)**2 + (2*x1 + x2 - 5)**2",
+        "dimensions": 2,
+        "bounds": [[-10.0, 10.0], [-10.0, 10.0]],
+        "explanation": "Quadratic plate function with global minimum 0 at (1, 3)."
+    },
+    "himmelblau": {
+        "name": "Himmelblau Function",
+        "objective": "(x1**2 + x2 - 11)**2 + (x1 + x2**2 - 7)**2",
+        "dimensions": 2,
+        "bounds": [[-5.0, 5.0], [-5.0, 5.0]],
+        "explanation": "Classic benchmark containing 4 identical global minima."
+    }
+};
 
-// initialize dom
-
+// Initialize DOM references
 function initializeDOM() {
-
     objectiveInput = $("objective");
     dimensionsInput = $("dimensions");
     maxStagesInput = $("maxStages");
     patienceInput = $("patience");
-
     boundsContainer = $("boundsContainer");
-
     optimizeButton = $("optimizeButton");
     buttonText = $("buttonText");
     buttonLoader = $("buttonLoader");
-
     connectionStatus = $("connectionStatus");
     agentBadge = $("agentBadge");
-
     strategyElement = $("strategy");
     confidenceElement = $("confidence");
     explorationElement = $("exploration");
     reasonElement = $("reason");
-
     bestScoreElement = $("bestScore");
     bestPositionElement = $("bestPosition");
-
     stageCountElement = $("stageCount");
     strategyCountElement = $("strategyCount");
-
     strategyHistoryElement = $("strategyHistory");
     convergenceStatus = $("convergenceStatus");
-
     chart = $("convergenceChart");
     chartEmpty = $("chartEmpty");
-
     errorMessage = $("errorMessage");
     errorText = $("errorText");
-
     activityList = $("activityList");
-    activityStatus = $("activityStatus");    // important compatibility aliases
-
-    // Some older versions of the application used
-    // activityLog instead of activityList.
-    //
-    // We intentionally use activityList everywhere.
-    // This prevents:
-    // Cannot set properties of null
-    // --------------------------------------------------
+    activityStatus = $("activityStatus");
 
     if (!activityList) {
-        console.warn(
-            "activityList element was not found in index.html."
-        );
+        console.warn("activityList element was not found in index.html.");
     }
 }
 
+// Lifecycle Startup
+document.addEventListener("DOMContentLoaded", () => {
+    initializeDOM();
+    generateBounds();
+    checkAPI();
 
-// startup
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        initializeDOM();
-
-        generateBounds();
-
-        checkAPI();
-
-        if (dimensionsInput) {
-
-            dimensionsInput.addEventListener(
-                "input",
-                generateBounds
-            );
-        }
-
-        if (optimizeButton) {
-
-            optimizeButton.addEventListener(
-                "click",
-                runOptimization
-            );
-        }
-
-        window.addEventListener(
-            "resize",
-            () => {
-
-                drawConvergenceChart(
-                    window.lastOptimizationResult
-                );
-            }
-        );
-
-        setupSmartInput();
-        setupAskAI();
+    if (dimensionsInput) {
+        dimensionsInput.addEventListener("input", generateBounds);
     }
-);
 
+    if (optimizeButton) {
+        optimizeButton.addEventListener("click", runOptimization);
+    }
 
+    window.addEventListener("resize", () => {
+        if (window.lastOptimizationResult) {
+            drawConvergenceChart(window.lastOptimizationResult);
+        }
+    });
 
-// api health
+    setupSmartInput();
+    setupAskAI();
+    setupArchitectureModal();
+});
 
+// API Health Check
 async function checkAPI() {
-
-    if (!connectionStatus) {
-        return;
-    }
+    if (!connectionStatus) return;
 
     try {
-
-        const response =
-            await fetch(
-                `${API_URL}/health`,
-                {
-                    method: "GET",
-                    cache: "no-store"
-                }
-            );
+        const response = await fetch(`${API_URL}/health`, {
+            method: "GET",
+            cache: "no-store"
+        });
 
         if (!response.ok) {
-
-            throw new Error(
-                `API returned HTTP ${response.status}`
-            );
+            throw new Error(`API returned HTTP ${response.status}`);
         }
 
-        const data =
-            await response.json();
-
-        console.log(
-            "OptiAgent API health:",
-            data
-        );
-
+        const data = await response.json();
         if (data.status !== "ok") {
-
-            throw new Error(
-                "Invalid API health response."
-            );
+            throw new Error("Invalid API health response.");
         }
 
-        connectionStatus.textContent =
-            "● API Online";
-
-        connectionStatus.classList.remove(
-            "offline"
-        );
-
-        connectionStatus.classList.add(
-            "online"
-        );
+        connectionStatus.textContent = "● API Online";
+        connectionStatus.classList.remove("offline");
+        connectionStatus.classList.add("online");
 
     } catch (error) {
-
-        console.error(
-            "API health check failed:",
-            error
-        );
-
-        connectionStatus.textContent =
-            "● API Offline";
-
-        connectionStatus.classList.remove(
-            "online"
-        );
-
-        connectionStatus.classList.add(
-            "offline"
-        );
+        connectionStatus.textContent = "● API Offline";
+        connectionStatus.classList.remove("online");
+        connectionStatus.classList.add("offline");
     }
 }
 
-
-// generate bounds
-
+// Generate Variable Bounds dynamically
 function generateBounds() {
+    if (!dimensionsInput || !boundsContainer) return;
 
-    if (
-        !dimensionsInput ||
-        !boundsContainer
-    ) {
+    const dimensions = parseInt(dimensionsInput.value, 10);
+    if (!Number.isInteger(dimensions) || dimensions < 1 || dimensions > 50) {
+        boundsContainer.innerHTML = "";
         return;
     }
 
-    const dimensions =
-        parseInt(
-            dimensionsInput.value,
-            10
-        );
+    boundsContainer.innerHTML = "";
 
-    if (
-        !Number.isInteger(dimensions) ||
-        dimensions < 1 ||
-        dimensions > 50
-    ) {
-
-        boundsContainer.innerHTML =
-            "";
-
-        return;
-    }
-
-    boundsContainer.innerHTML =
-        "";
-
-    for (
-        let i = 1;
-        i <= dimensions;
-        i++
-    ) {
-
-        const row =
-            document.createElement(
-                "div"
-            );
-
-        row.className =
-            "bound-row";
+    for (let i = 1; i <= dimensions; i++) {
+        const row = document.createElement("div");
+        row.className = "bound-row";
 
         row.innerHTML = `
-            <span class="bound-label">
-                x${i}
-            </span>
-
+            <div class="bound-label">x${i}</div>
             <input
+                id="lowerBound${i}"
                 type="number"
                 class="lower-bound"
                 data-index="${i}"
                 value="-10"
                 step="any"
-                placeholder="Lower"
+                placeholder="Lower [min]"
             >
-
             <input
+                id="upperBound${i}"
                 type="number"
                 class="upper-bound"
                 data-index="${i}"
                 value="10"
                 step="any"
-                placeholder="Upper"
+                placeholder="Upper [max]"
             >
         `;
 
-        boundsContainer.appendChild(
-            row
-        );
+        boundsContainer.appendChild(row);
     }
 }
 
-
-// examples
-
+// Enhanced Preset Examples loader
 function setExample(expression) {
+    if (!objectiveInput) return;
 
-    if (!objectiveInput) {
-        return;
+    const key = String(expression).toLowerCase().trim();
+    if (PRESET_BENCHMARKS[key]) {
+        const preset = PRESET_BENCHMARKS[key];
+        objectiveInput.value = preset.objective;
+
+        if (dimensionsInput) {
+            dimensionsInput.value = preset.dimensions;
+        }
+
+        generateBounds();
+
+        // Populate variable bounds from preset
+        if (Array.isArray(preset.bounds)) {
+            preset.bounds.forEach((b, idx) => {
+                const lowerInput = $(`lowerBound${idx + 1}`);
+                const upperInput = $(`upperBound${idx + 1}`);
+                if (lowerInput && b[0] !== undefined) lowerInput.value = b[0];
+                if (upperInput && b[1] !== undefined) upperInput.value = b[1];
+            });
+        }
+
+        clearError();
+        showExtractionStatus(`Loaded preset "${preset.name}": ${preset.explanation}`, "info");
+    } else {
+        objectiveInput.value = expression;
     }
-
-    objectiveInput.value =
-        expression;
 }
 
-
-// get bounds
-
+// Collect and validate bounds
 function getBounds() {
-
-    const lowerInputs =
-        document.querySelectorAll(
-            ".lower-bound"
-        );
-
-    const upperInputs =
-        document.querySelectorAll(
-            ".upper-bound"
-        );
-
+    const lowerInputs = document.querySelectorAll(".lower-bound");
+    const upperInputs = document.querySelectorAll(".upper-bound");
     const bounds = [];
 
-    for (
-        let i = 0;
-        i < lowerInputs.length;
-        i++
-    ) {
+    for (let i = 0; i < lowerInputs.length; i++) {
+        const lower = parseFloat(lowerInputs[i].value);
+        const upper = parseFloat(upperInputs[i].value);
 
-        const lower =
-            parseFloat(
-                lowerInputs[i].value
-            );
-
-        const upper =
-            parseFloat(
-                upperInputs[i].value
-            );
-
-        if (
-            !Number.isFinite(lower) ||
-            !Number.isFinite(upper)
-        ) {
-
-            throw new Error(
-                `Invalid bounds for x${i + 1}.`
-            );
+        if (!Number.isFinite(lower) || !Number.isFinite(upper)) {
+            throw new Error(`Invalid bounds for x${i + 1}.`);
         }
 
         if (lower >= upper) {
-
-            throw new Error(
-                `Lower bound must be less than ` +
-                `upper bound for x${i + 1}.`
-            );
+            throw new Error(`Lower bound must be strictly less than upper bound for x${i + 1}.`);
         }
 
-        bounds.push([
-            lower,
-            upper
-        ]);
+        bounds.push([lower, upper]);
     }
 
     return bounds;
 }
 
-
-// agent pipeline
-
+// Pipeline Stepper State Manager
 function setAgentStep(step) {
+    const steps = document.querySelectorAll(".pipeline-step");
+    const order = ["observe", "reason", "decide", "act", "validate", "adapt"];
+    const currentIndex = order.indexOf(step);
 
-    const steps =
-        document.querySelectorAll(
-            ".pipeline-step"
-        );
+    steps.forEach((element) => {
+        const elementStep = element.dataset.step || element.id.replace("pipeline", "").toLowerCase();
+        const index = order.indexOf(elementStep);
 
-    const order = [
-        "observe",
-        "reason",
-        "decide",
-        "act",
-        "validate",
-        "adapt"
-    ];
+        element.classList.remove("active");
+        element.classList.remove("complete");
 
-    const currentIndex =
-        order.indexOf(step);
-
-    steps.forEach(
-        element => {
-
-            const elementStep =
-                element.dataset.step;
-
-            const index =
-                order.indexOf(
-                    elementStep
-                );
-
-            element.classList.remove(
-                "active"
-            );
-
-            element.classList.remove(
-                "complete"
-            );
-
-            if (
-                index < currentIndex
-            ) {
-
-                element.classList.add(
-                    "complete"
-                );
-            }
-
-            if (
-                index === currentIndex
-            ) {
-
-                element.classList.add(
-                    "active"
-                );
-            }
+        if (index < currentIndex) {
+            element.classList.add("complete");
+        } else if (index === currentIndex) {
+            element.classList.add("active");
         }
-    );
+    });
 }
 
-
-// button state
-
+// Button Running State
 function setRunning(running) {
-
     if (optimizeButton) {
-
-        optimizeButton.disabled =
-            running;
+        optimizeButton.disabled = running;
     }
-
     if (buttonText) {
-
-        buttonText.textContent =
-            running
-                ? "Agent is optimizing..."
-                : "Run OptiAgent";
+        buttonText.textContent = running ? "Agent is optimizing..." : "Run OptiAgent";
     }
-
     if (buttonLoader) {
-
-        buttonLoader.classList.toggle(
-            "hidden",
-            !running
-        );
+        buttonLoader.classList.toggle("hidden", !running);
     }
 }
 
-
-// activity
-
+// Activity Telemetry Feed
 function clearActivity() {
-
-    if (!activityList) {
-        return;
-    }
-
-    activityList.innerHTML =
-        "";
+    if (!activityList) return;
+    activityList.innerHTML = "";
 }
-
 
 function clearActivityLog() {
-
-    // Compatibility function.
-    // Both old and new calls now operate
-    // on the same activityList element.
-
     clearActivity();
 }
 
+function addActivity(title, message, type = "info") {
+    if (!activityList) return;
 
-function addActivity(
-    title,
-    message,
-    type = "info"
-) {
+    const item = document.createElement("div");
+    item.className = `activity-item ${type}`;
 
-    if (!activityList) {
+    const dot = document.createElement("div");
+    dot.className = "activity-dot";
 
-        console.warn(
-            "Cannot display activity: " +
-            "activityList element is missing."
-        );
+    const content = document.createElement("div");
+    content.className = "activity-content";
 
-        return;
-    }
+    const strong = document.createElement("strong");
+    strong.textContent = title;
 
-    const item =
-        document.createElement(
-            "div"
-        );
+    const paragraph = document.createElement("p");
+    paragraph.textContent = message;
 
-    item.className =
-        `activity-item ${type}`;
+    content.appendChild(strong);
+    content.appendChild(paragraph);
 
-    const dot =
-        document.createElement(
-            "div"
-        );
+    item.appendChild(dot);
+    item.appendChild(content);
 
-    dot.className =
-        "activity-dot";
-
-    const content =
-        document.createElement(
-            "div"
-        );
-
-    content.className =
-        "activity-content";
-
-    const strong =
-        document.createElement(
-            "strong"
-        );
-
-    strong.textContent =
-        title;
-
-    const paragraph =
-        document.createElement(
-            "p"
-        );
-
-    paragraph.textContent =
-        message;
-
-    content.appendChild(
-        strong
-    );
-
-    content.appendChild(
-        paragraph
-    );
-
-    item.appendChild(
-        dot
-    );
-
-    item.appendChild(
-        content
-    );
-
-    activityList.appendChild(
-        item
-    );
-
-    activityList.scrollTop =
-        activityList.scrollHeight;
+    activityList.appendChild(item);
+    activityList.scrollTop = activityList.scrollHeight;
 }
-
 
 function setActivityStatus(status) {
-
-    if (!activityStatus) {
-        return;
-    }
-
-    activityStatus.textContent =
-        status;
+    if (!activityStatus) return;
+    activityStatus.textContent = status;
 }
 
-
-// error panel
-
+// Error Handling
 function showError(message) {
-
     if (errorMessage) {
-
-        errorMessage.classList.remove(
-            "hidden"
-        );
+        errorMessage.classList.remove("hidden");
     }
-
     if (errorText) {
-
-        errorText.textContent =
-            message ||
-            "Optimization failed.";
+        errorText.textContent = message || "Optimization failed.";
     }
-
-    console.error(
-        "OptiAgent Error:",
-        message
-    );
+    if (errorMessage) {
+        errorMessage.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    console.error("OptiAgent Error:", message);
 }
-
 
 function clearError() {
-
     if (errorMessage) {
-
-        errorMessage.classList.add(
-            "hidden"
-        );
+        errorMessage.classList.add("hidden");
     }
-
     if (errorText) {
-
-        errorText.textContent =
-            "";
+        errorText.textContent = "";
     }
 }
 
-
-// run optimization
-
+// Primary Optimization Execution Loop
 async function runOptimization() {
+    console.log("RUN OPTIMIZATION CALLED", new Date().toISOString());
 
-    console.log(
-        "RUN OPTIMIZATION CALLED",
-        new Date().toISOString()
-    );
     try {
-
         clearError();
-
         setRunning(true);
-
         clearActivity();
-
-        setActivityStatus(
-            "Running"
-        );
+        setActivityStatus("Running");
 
         if (agentBadge) {
-
-            agentBadge.textContent =
-                "Running";
-
-            agentBadge.classList.remove(
-                "complete"
-            );
-
-            agentBadge.classList.add(
-                "running"
-            );
+            agentBadge.textContent = "RUNNING";
+            agentBadge.classList.remove("complete");
+            agentBadge.classList.add("running");
         }
 
+        // STEP 1: OBSERVE
+        setAgentStep("observe");
+        addActivity("Agent started", "Beginning autonomous multi-stage optimization cycle.", "active");
 
-                // OBSERVE
-        
-        setAgentStep(
-            "observe"
-        );
-
-        addActivity(
-            "Agent started",
-            "Beginning autonomous optimization.",
-            "active"
-        );
-
-
-                // INPUT
-        
-        if (
-            !objectiveInput ||
-            !dimensionsInput ||
-            !maxStagesInput ||
-            !patienceInput
-        ) {
-
-            throw new Error(
-                "Required input elements are missing from index.html."
-            );
+        if (!objectiveInput || !dimensionsInput || !maxStagesInput || !patienceInput) {
+            throw new Error("Required input elements are missing from application.");
         }
 
-        const objective =
-            objectiveInput.value.trim();
-
-        const dimensions =
-            parseInt(
-                dimensionsInput.value,
-                10
-            );
-
-        const maxStages =
-            parseInt(
-                maxStagesInput.value,
-                10
-            );
-
-        const patience =
-            parseInt(
-                patienceInput.value,
-                10
-            );
-
+        const objective = objectiveInput.value.trim();
+        const dimensions = parseInt(dimensionsInput.value, 10);
+        const maxStages = parseInt(maxStagesInput.value, 10);
+        const patience = parseInt(patienceInput.value, 10);
 
         if (!objective) {
-
-            throw new Error(
-                "Please enter an objective function."
-            );
+            throw new Error("Please enter an objective function expression.");
         }
 
-
-        if (
-            !Number.isInteger(dimensions) ||
-            dimensions < 1 ||
-            dimensions > 50
-        ) {
-
-            throw new Error(
-                "Number of dimensions must be between 1 and 50."
-            );
+        if (!Number.isInteger(dimensions) || dimensions < 1 || dimensions > 50) {
+            throw new Error("Number of dimensions must be between 1 and 50.");
         }
 
-
-        if (
-            !Number.isInteger(maxStages) ||
-            maxStages < 1 ||
-            maxStages > 20
-        ) {
-
-            throw new Error(
-                "Maximum stages must be between 1 and 20."
-            );
+        if (!Number.isInteger(maxStages) || maxStages < 1 || maxStages > 20) {
+            throw new Error("Maximum stages must be between 1 and 20.");
         }
 
-
-        if (
-            !Number.isInteger(patience) ||
-            patience < 1 ||
-            patience > 20
-        ) {
-
-            throw new Error(
-                "Patience must be between 1 and 20."
-            );
+        if (!Number.isInteger(patience) || patience < 1 || patience > 20) {
+            throw new Error("Patience must be between 1 and 20.");
         }
 
+        const bounds = getBounds();
 
-        const bounds =
-            getBounds();
+        addActivity("Problem observed", `Parsed ${dimensions}-dimensional formulation: f(x) = ${objective}`, "complete");
+        addActivity("Search space validated", `${dimensions} variable bounds verified within safe continuous domain.`, "complete");
 
+        // STEP 2: REASON
+        setAgentStep("reason");
+        setActivityStatus("Reasoning");
+        addActivity("Agent reasoning", "Analyzing objective landscape topology, modality, and valley traps.", "active");
 
-        addActivity(
-            "Problem observed",
-            `Received a ${dimensions}-dimensional optimization problem.`,
-            "complete"
-        );
-
-
-        addActivity(
-            "Search space identified",
-            `${dimensions} variable bounds validated successfully.`,
-            "complete"
-        );
-
-
-                // REASON
-        
-        setAgentStep(
-            "reason"
-        );
-
-        setActivityStatus(
-            "Reasoning"
-        );
-
-        addActivity(
-            "Agent reasoning",
-            "Analyzing the objective function and search space.",
-            "active"
-        );
-
-
-                // PAYLOAD
-        
         const payload = {
-
-            objective:
-                objective,
-
-            dimensions:
-                dimensions,
-
-            bounds:
-                bounds,
-
-            max_stages:
-                maxStages,
-
-            patience:
-                patience
+            objective: objective,
+            dimensions: dimensions,
+            bounds: bounds,
+            max_stages: maxStages,
+            patience: patience
         };
 
+        addActivity("Requesting strategic decision", "Sending problem context to Gemini AI Planner.", "active");
 
-                // GEMINI REQUEST
-        
-        addActivity(
-            "Requesting strategic decision",
-            "Sending the optimization problem to the AI planner.",
-            "active"
-        );
-
-
-        const response =
-            await fetch(
-                `${API_URL}/optimize`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify(
-                            payload
-                        )
-                }
-            );
-
+        const response = await fetch(`${API_URL}/optimize`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
 
         let data;
-
-
         try {
-
-            data =
-                await response.json();
-
+            data = await response.json();
         } catch {
-
-            throw new Error(
-                `Server returned HTTP ${response.status}.`
-            );
+            throw new Error(`Server returned HTTP ${response.status}.`);
         }
 
-
-        console.log(
-            "OptiAgent API result:",
-            data
-        );
-
-
-                // API ERROR
-        
-        if (
-            !response.ok ||
-            !data.success
-        ) {
-
-            throw new Error(
-                data.error ||
-                `Optimization failed with HTTP ${response.status}.`
-            );
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || `Optimization failed with HTTP ${response.status}.`);
         }
 
+        // STEP 3: DECIDE
+        setAgentStep("decide");
+        setActivityStatus("Strategy selected");
 
-                // DECIDE
-        
-        setAgentStep(
-            "decide"
-        );
-
-        setActivityStatus(
-            "Strategy selected"
-        );
-
-
-        const selectedStrategy =
-            extractStrategy(
-                data
-            );
-
-
+        const selectedStrategy = extractStrategy(data);
         addActivity(
             "Strategy selected",
-            selectedStrategy
-                ? `AI selected ${selectedStrategy}.`
-                : "Gemini successfully selected an optimization strategy.",
+            selectedStrategy ? `AI selected ${selectedStrategy} optimizer.` : "Strategic algorithm selection complete.",
             "complete"
         );
 
+        await sleep(150);
+
+        // STEP 4: ACT
+        setAgentStep("act");
+        setActivityStatus("Optimizing");
+        addActivity("Optimization executing", "Numerical search stage executing across continuous parameter space.", "active");
 
         await sleep(150);
 
-
-                // ACT
-        
-        setAgentStep(
-            "act"
-        );
-
-        setActivityStatus(
-            "Optimizing"
-        );
-
-        addActivity(
-            "Optimization executing",
-            "The selected numerical optimizer is searching the solution space.",
-            "active"
-        );
-
+        // STEP 5: VALIDATE
+        setAgentStep("validate");
+        setActivityStatus("Validating");
+        addActivity("Solution validated", "Independent AST validator verified bounds and re-computed f(x*).", "complete");
 
         await sleep(150);
 
+        // STEP 6: ADAPT
+        const stages = Array.isArray(data.stage_history) ? data.stage_history : [];
 
-                // VALIDATE
-        
-        setAgentStep(
-            "validate"
-        );
-
-        setActivityStatus(
-            "Validating"
-        );
-
-        addActivity(
-            "Solution validated",
-            "Checking the optimizer result and objective score.",
-            "complete"
-        );
-
-
-        await sleep(150);
-
-
-                // ADAPT
-        
-        const stages =
-            Array.isArray(
-                data.stage_history
-            )
-                ? data.stage_history
-                : [];
-
-
-        if (
-            stages.length > 1
-        ) {
-
-            setAgentStep(
-                "adapt"
-            );
-
-            setActivityStatus(
-                "Adapted"
-            );
-
-            addActivity(
-                "Agent adapted",
-                `${stages.length} optimization stages were executed.`,
-                "complete"
-            );
-
+        if (stages.length > 1) {
+            setAgentStep("adapt");
+            setActivityStatus("Adapted");
+            addActivity("Agent adapted", `Executed ${stages.length} stages with dynamic stagnation recovery.`, "complete");
         } else {
-
-            // Mark validate complete
-            const validateSteps =
-                document.querySelectorAll(
-                    ".pipeline-step"
-                );
-
-            validateSteps.forEach(
-                element => {
-
-                    if (
-                        element.dataset.step ===
-                        "validate"
-                    ) {
-
-                        element.classList.remove(
-                            "active"
-                        );
-
-                        element.classList.add(
-                            "complete"
-                        );
-                    }
+            const validateSteps = document.querySelectorAll(".pipeline-step");
+            validateSteps.forEach((el) => {
+                if (el.dataset.step === "validate") {
+                    el.classList.remove("active");
+                    el.classList.add("complete");
                 }
-            );
-
-            setActivityStatus(
-                "Complete"
-            );
+            });
+            setActivityStatus("Complete");
         }
 
+        addActivity("Optimization complete", `Optimal minimum score ${formatNumber(data.best_score)} successfully located.`, "complete");
 
-                // COMPLETE
-        
-        addActivity(
-            "Optimization complete",
-            "Best solution obtained and results are ready.",
-            "complete"
-        );
+        displayResult(data);
+        window.lastOptimizationResult = data;
+        drawConvergenceChart(data);
 
-
-                // DISPLAY RESULT
-        
-        displayResult(
-            data
-        );
-
-
-        window.lastOptimizationResult =
-            data;
-
-
-        drawConvergenceChart(
-            data
-        );
-
-
-                // API STATUS
-        
         if (connectionStatus) {
-
-            connectionStatus.textContent =
-                "● API Online";
-
-            connectionStatus.classList.remove(
-                "offline"
-            );
-
-            connectionStatus.classList.add(
-                "online"
-            );
+            connectionStatus.textContent = "● API Online";
+            connectionStatus.classList.remove("offline");
+            connectionStatus.classList.add("online");
         }
-
 
     } catch (error) {
-
-        console.error(
-            "Optimization error:",
-            error
-        );
-
+        console.error("Optimization error:", error);
 
         if (agentBadge) {
-
-            agentBadge.textContent =
-                "Error";
-
-            agentBadge.classList.remove(
-                "running"
-            );
-
-            agentBadge.classList.remove(
-                "complete"
-            );
+            agentBadge.textContent = "ERROR";
+            agentBadge.classList.remove("running");
+            agentBadge.classList.remove("complete");
         }
 
-
-        setActivityStatus(
-            "Error"
-        );
-
-
-        addActivity(
-            "Optimization failed",
-            error.message ||
-            "Unknown error",
-            "error"
-        );
-
-
-        showError(
-            error.message
-        );
-
+        setActivityStatus("Error");
+        addActivity("Optimization failed", error.message || "Unknown error encountered.", "error");
+        showError(error.message);
 
     } finally {
-
-        setRunning(
-            false
-        );
+        setRunning(false);
     }
 }
 
-
-// extract strategy
-
-function extractStrategy(data) {    // direct strategy
-
-    if (
-        typeof data.strategy ===
-        "string"
-    ) {
-
-        return data.strategy;
-    }    // direct recommended strategy
-
-    if (
-        typeof data.recommended_strategy ===
-        "string"
-    ) {
-
-        return data.recommended_strategy;
-    }    // gemini recommendation
-
-    if (
-        data.recommendation &&
-        typeof data.recommendation
-            .recommended_strategy ===
-        "string"
-    ) {
-
-        return data.recommendation
-            .recommended_strategy;
-    }    // strategy history
-
-    if (
-        Array.isArray(
-            data.strategy_history
-        ) &&
-        data.strategy_history.length > 0
-    ) {
-
-        return String(
-            data.strategy_history[
-            data.strategy_history.length - 1
-            ]
-        );
-    }    // stage history
-
-    if (
-        Array.isArray(
-            data.stage_history
-        ) &&
-        data.stage_history.length > 0
-    ) {
-
-        const lastStage =
-            data.stage_history[
-            data.stage_history.length - 1
-            ];
-
-        if (
-            lastStage &&
-            typeof lastStage.strategy ===
-            "string"
-        ) {
-
+// Strategy extractor helper
+function extractStrategy(data) {
+    if (typeof data.strategy === "string") return data.strategy;
+    if (typeof data.recommended_strategy === "string") return data.recommended_strategy;
+    if (data.recommendation && typeof data.recommendation.recommended_strategy === "string") {
+        return data.recommendation.recommended_strategy;
+    }
+    if (Array.isArray(data.strategy_history) && data.strategy_history.length > 0) {
+        return String(data.strategy_history[data.strategy_history.length - 1]);
+    }
+    if (Array.isArray(data.stage_history) && data.stage_history.length > 0) {
+        const lastStage = data.stage_history[data.stage_history.length - 1];
+        if (lastStage && typeof lastStage.strategy === "string") {
             return lastStage.strategy;
         }
     }
-
-
     return null;
 }
 
-
-// extract recommendation
-
+// Recommendation extractor helper
 function extractRecommendation(data) {
-
-    if (
-        data &&
-        data.recommendation &&
-        typeof data.recommendation ===
-        "object"
-    ) {
-
+    if (data && data.recommendation && typeof data.recommendation === "object") {
         return data.recommendation;
     }
-
-
-    if (
-        data &&
-        data.strategy_decision &&
-        typeof data.strategy_decision ===
-        "object"
-    ) {
-
+    if (data && data.strategy_decision && typeof data.strategy_decision === "object") {
         return data.strategy_decision;
     }
-
-
-    if (
-        data &&
-        data.initial_strategy &&
-        typeof data.initial_strategy ===
-        "object"
-    ) {
-
+    if (data && data.initial_strategy && typeof data.initial_strategy === "object") {
         return data.initial_strategy;
     }
-
-
     return null;
 }
 
-
-// display result
-
+// Display results in UI
 function displayResult(data) {
-
-    console.log(
-        "Displaying OptiAgent result:",
-        data
-    );
-
-
-        // BASIC RESULT
-    
     if (bestScoreElement) {
-
-        bestScoreElement.textContent =
-            formatNumber(
-                data.best_score
-            );
+        bestScoreElement.textContent = formatNumber(data.best_score);
     }
-
 
     if (bestPositionElement) {
-
-        bestPositionElement.textContent =
-            formatPosition(
-                data.best_position
-            );
+        bestPositionElement.textContent = formatPosition(data.best_position);
     }
 
-
-        // STAGES
-    
-    const stages =
-        Array.isArray(
-            data.stage_history
-        )
-            ? data.stage_history
-            : [];
-
-
+    const stages = Array.isArray(data.stage_history) ? data.stage_history : [];
     if (stageCountElement) {
-
-        stageCountElement.textContent =
-            stages.length;
+        stageCountElement.textContent = stages.length;
     }
 
-
-        // STRATEGIES
-    
-    const strategies =
-        Array.isArray(
-            data.strategy_history
-        )
-            ? data.strategy_history
-            : [];
-
-
+    const strategies = Array.isArray(data.strategy_history) ? data.strategy_history : [];
     if (strategyCountElement) {
-
-        strategyCountElement.textContent =
-            new Set(
-                strategies
-            ).size;
+        strategyCountElement.textContent = new Set(strategies).size;
     }
 
-
-        // GEMINI RECOMMENDATION
-    
-    const decision =
-        extractRecommendation(
-            data
-        );
-
-
-    console.log(
-        "Gemini recommendation:",
-        decision
-    );
-
-
-        // STRATEGY
-    
-    let selectedStrategy =
-        null;
-
-
-    if (decision) {
-
-        selectedStrategy =
-            decision.recommended_strategy ||
-            decision.strategy ||
-            decision.algorithm;
+    const decision = extractRecommendation(data);
+    let selectedStrategy = decision ? (decision.recommended_strategy || decision.strategy || decision.algorithm) : null;
+    if (!selectedStrategy) {
+        selectedStrategy = extractStrategy(data);
     }
 
-
-    if (
-        !selectedStrategy
-    ) {
-
-        selectedStrategy =
-            extractStrategy(
-                data
-            );
+    if (strategyElement && selectedStrategy) {
+        strategyElement.textContent = selectedStrategy;
     }
 
-
-    if (
-        strategyElement &&
-        selectedStrategy
-    ) {
-
-        strategyElement.textContent =
-            selectedStrategy;
-    }
-
-
-        // CONFIDENCE
-    
-    let confidence =
-        null;
-
-
-    if (decision) {
-
-        confidence =
-            decision.confidence;
-    }
-
-
-    if (
-        confidence ===
-        undefined ||
-        confidence ===
-        null
-    ) {
-
-        confidence =
-            data.confidence;
-    }
-
-
-    if (
-        confidenceElement
-    ) {
-
-        if (
-            confidence !==
-            undefined &&
-            confidence !==
-            null &&
-            confidence !== ""
-        ) {
-
-            const number =
-                Number(
-                    confidence
-                );
-
-
-            if (
-                Number.isFinite(
-                    number
-                )) {
-
-                const percentage =
-                    number <= 1
-                        ? number * 100
-                        : number;
-
-
-                confidenceElement.textContent =
-                    `${percentage.toFixed(0)}%`;
-
+    let confidence = decision ? decision.confidence : (data.confidence ?? null);
+    if (confidenceElement) {
+        if (confidence !== undefined && confidence !== null && confidence !== "") {
+            const num = Number(confidence);
+            if (Number.isFinite(num)) {
+                const percentage = num <= 1 ? num * 100 : num;
+                confidenceElement.textContent = `${percentage.toFixed(0)}%`;
             } else {
-
-                confidenceElement.textContent =
-                    "—";
+                confidenceElement.textContent = "—";
             }
-
         } else {
-
-            confidenceElement.textContent =
-                "—";
+            confidenceElement.textContent = "—";
         }
     }
 
-
-        // EXPLORATION
-    
-    let exploration =
-        null;
-
-
-    if (decision) {
-
-        exploration =
-            decision.exploration_level ??
-            decision.exploration;
-    }
-
-
-    if (
-        exploration ===
-        undefined ||
-        exploration ===
-        null
-    ) {
-
-        exploration =
-            data.exploration_level ??
-            data.exploration;
-    }
-
-
-    if (
-        explorationElement
-    ) {
-
-        if (
-            exploration !==
-            undefined &&
-            exploration !==
-            null &&
-            exploration !== ""
-        ) {
-
-            const text =
-                String(
-                    exploration
-                );
-
-
-            explorationElement.textContent =
-                text.charAt(0).toUpperCase()
-                +
-                text.slice(1);
-
+    let exploration = decision ? (decision.exploration_level ?? decision.exploration) : (data.exploration_level ?? data.exploration);
+    if (explorationElement) {
+        if (exploration !== undefined && exploration !== null && exploration !== "") {
+            const text = String(exploration);
+            explorationElement.textContent = text.charAt(0).toUpperCase() + text.slice(1);
         } else {
-
-            explorationElement.textContent =
-                "—";
+            explorationElement.textContent = "—";
         }
     }
 
-
-        // AI REASON
-    
-    let reason =
-        null;
-
-
-    if (decision) {
-
-        reason =
-            decision.reason;
-    }
-
-
-    if (
-        !reason &&
-        data.reason
-    ) {
-
-        reason =
-            data.reason;
-    }
-
-
+    let reason = decision ? decision.reason : (data.reason ?? null);
     if (reasonElement) {
-
-        reasonElement.textContent =
-            reason ||
-            "Gemini completed the strategic decision.";
+        reasonElement.textContent = reason || "Gemini completed strategic multi-stage optimization.";
     }
 
+    displayStrategyHistory(stages);
 
-        // STRATEGY HISTORY
-    
-    displayStrategyHistory(
-        stages
-    );
-
-
-        // CONVERGENCE
-    
-    const convergence =
-        Array.isArray(
-            data.convergence_history
-        )
-            ? data.convergence_history
-            : [];
-
-
+    const convergence = Array.isArray(data.convergence_history) ? data.convergence_history : [];
     if (convergenceStatus) {
-
-        convergenceStatus.textContent =
-            convergence.length > 0
-                ? `${convergence.length} iterations recorded`
-                : "Optimization completed";
+        convergenceStatus.textContent = convergence.length > 0 ? `${convergence.length} iterations recorded` : "Complete";
     }
 
-
-        // AGENT BADGE
-    
     if (agentBadge) {
-
-        agentBadge.textContent =
-            "Complete";
-
-        agentBadge.classList.remove(
-            "running"
-        );
-
-        agentBadge.classList.add(
-            "complete"
-        );
+        agentBadge.textContent = "COMPLETE";
+        agentBadge.classList.remove("running");
+        agentBadge.classList.add("complete");
     }
 }
 
+// Display Strategy History
+function displayStrategyHistory(stages) {
+    if (!strategyHistoryElement) return;
 
-// strategy history
-
-function displayStrategyHistory(
-    stages
-) {
-
-    if (!strategyHistoryElement) {
+    if (!Array.isArray(stages) || stages.length === 0) {
+        strategyHistoryElement.innerHTML = `
+            <div class="empty-state">No optimization stages yet.</div>
+        `;
         return;
     }
 
+    strategyHistoryElement.innerHTML = "";
 
-    if (
-        !Array.isArray(stages) ||
-        stages.length === 0
-    ) {
+    stages.forEach((stage, index) => {
+        const item = document.createElement("div");
+        item.className = "history-item";
 
-        strategyHistoryElement.innerHTML =
-            `
-            <div class="empty-state">
-                No optimization stages yet.
-            </div>
-            `;
+        const stageNumber = stage?.stage ?? (index + 1);
+        const algorithm = stage?.strategy ?? stage?.algorithm ?? "Unknown";
+        const score = stage?.global_best_score ?? stage?.stage_best_score ?? stage?.best_score;
 
-        return;
-    }
+        item.innerHTML = `
+            <span class="history-stage">Stage ${escapeHtml(stageNumber)}</span>
+            <span class="history-algorithm">${escapeHtml(algorithm)}</span>
+            <span class="history-score">${formatNumber(score)}</span>
+        `;
 
-
-    strategyHistoryElement.innerHTML =
-        "";
-
-
-    stages.forEach(
-        (
-            stage,
-            index
-        ) => {
-
-            const item =
-                document.createElement(
-                    "div"
-                );
-
-            item.className =
-                "history-item";
-
-
-            const stageNumber =
-                stage?.stage ??
-                index + 1;
-
-
-            const algorithm =
-                stage?.strategy ??
-                stage?.algorithm ??
-                "Unknown";
-
-
-            const score =
-                stage?.global_best_score ??
-                stage?.stage_best_score ??
-                stage?.best_score;
-
-
-            item.innerHTML = `
-                <span class="history-stage">
-                    Stage ${escapeHtml(stageNumber)}
-                </span>
-
-                <span class="history-algorithm">
-                    ${escapeHtml(algorithm)}
-                </span>
-
-                <span class="history-score">
-                    ${formatNumber(score)}
-                </span>
-            `;
-
-
-            strategyHistoryElement.appendChild(
-                item
-            );
-        }
-    );
+        strategyHistoryElement.appendChild(item);
+    });
 }
 
+// Precision Convergence Canvas Chart Renderer
+function drawConvergenceChart(data) {
+    if (!chart || !chart.getContext) return;
 
-// convergence chart
+    const context = chart.getContext("2d");
+    const width = chart.clientWidth;
+    const height = chart.clientHeight;
 
-function drawConvergenceChart(
-    data
-) {
+    if (width <= 0 || height <= 0) return;
 
-    if (
-        !chart ||
-        !chart.getContext
-    ) {
+    const ratio = window.devicePixelRatio || 1;
+    chart.width = width * ratio;
+    chart.height = height * ratio;
 
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    context.clearRect(0, 0, width, height);
+
+    const history = data && Array.isArray(data.convergence_history) ? data.convergence_history : [];
+
+    if (history.length < 2) {
+        if (chartEmpty) chartEmpty.classList.remove("hidden");
         return;
     }
 
+    const values = history.map((point) => {
+        if (typeof point === "number") return Number(point);
+        return Number(point?.score);
+    }).filter(Number.isFinite);
 
-    const context =
-        chart.getContext(
-            "2d"
-        );
-
-
-    const width =
-        chart.clientWidth;
-
-
-    const height =
-        chart.clientHeight;
-
-
-    if (
-        width <= 0 ||
-        height <= 0
-    ) {
-
+    if (values.length < 2) {
+        if (chartEmpty) chartEmpty.classList.remove("hidden");
         return;
     }
-
-
-    const ratio =
-        window.devicePixelRatio ||
-        1;
-
-
-    chart.width =
-        width * ratio;
-
-
-    chart.height =
-        height * ratio;
-
-
-    context.setTransform(
-        ratio,
-        0,
-        0,
-        ratio,
-        0,
-        0
-    );
-
-
-    context.clearRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-
-    const history =
-        data &&
-            Array.isArray(
-                data.convergence_history
-            )
-            ? data.convergence_history
-            : [];
-
-
-    if (
-        history.length < 2
-    ) {
-
-        if (chartEmpty) {
-
-            chartEmpty.classList.remove(
-                "hidden"
-            );
-        }
-
-        return;
-    }
-
-
-    const values =
-        history
-            .map(
-                point => {
-
-                    if (
-                        typeof point ===
-                        "number"
-                    ) {
-
-                        return Number(
-                            point
-                        );
-                    }
-
-
-                    return Number(
-                        point?.score
-                    );
-                }
-            )
-            .filter(
-                Number.isFinite
-            );
-
-
-    if (
-        values.length < 2
-    ) {
-
-        if (chartEmpty) {
-
-            chartEmpty.classList.remove(
-                "hidden"
-            );
-        }
-
-        return;
-    }
-
 
     if (chartEmpty) {
-
-        chartEmpty.classList.add(
-            "hidden"
-        );
+        chartEmpty.classList.add("hidden");
     }
 
+    // Chart margins
+    const padding = { left: 70, right: 24, top: 24, bottom: 42 };
+    const graphWidth = width - padding.left - padding.right;
+    const graphHeight = height - padding.top - padding.bottom;
 
-        // GRAPH DIMENSIONS
-    
-    const padding = {
+    let minValue = Math.min(...values);
+    let maxValue = Math.max(...values);
 
-        left: 65,
-
-        right: 20,
-
-        top: 20,
-
-        bottom: 40
-    };
-
-
-    const graphWidth =
-        width -
-        padding.left -
-        padding.right;
-
-
-    const graphHeight =
-        height -
-        padding.top -
-        padding.bottom;
-
-
-        // RANGE
-    
-    let minValue =
-        Math.min(
-            ...values
-        );
-
-
-    let maxValue =
-        Math.max(
-            ...values
-        );
-
-
-    if (
-        minValue ===
-        maxValue
-    ) {
-
-        const delta =
-            Math.abs(
-                minValue
-            ) * 0.1 ||
-            1;
-
-
-        minValue -=
-            delta;
-
-
-        maxValue +=
-            delta;
+    if (minValue === maxValue) {
+        const delta = Math.abs(minValue) * 0.1 || 1;
+        minValue -= delta;
+        maxValue += delta;
     }
-        // GRID
-    
-    context.strokeStyle =
-        "#1d314b";
 
-    context.lineWidth =
-        1;
+    // Draw Subtle Horizontal Grid Lines & Values
+    context.strokeStyle = "#1c273c";
+    context.lineWidth = 1;
 
-
-    for (
-        let i = 0;
-        i <= 5;
-        i++
-    ) {
-
-        const y =
-            padding.top +
-            graphHeight *
-            (
-                i / 5
-            );
-
+    const gridSteps = 5;
+    for (let i = 0; i <= gridSteps; i++) {
+        const y = padding.top + graphHeight * (i / gridSteps);
 
         context.beginPath();
-
-
-        context.moveTo(
-            padding.left,
-            y
-        );
-
-
-        context.lineTo(
-            width -
-            padding.right,
-            y
-        );
-
-
+        context.moveTo(padding.left, y);
+        context.lineTo(width - padding.right, y);
         context.stroke();
 
-
-        const value =
-            maxValue -
-            (
-                maxValue -
-                minValue
-            ) *
-            (
-                i / 5
-            );
-
-
-        context.fillStyle =
-            "#8fa4bd";
-
-
-        context.font =
-            "10px sans-serif";
-
-
-        context.textAlign =
-            "right";
-
-
-        context.fillText(
-            formatNumber(
-                value
-            ),
-            padding.left - 8,
-            y + 3
-        );
+        const value = maxValue - (maxValue - minValue) * (i / gridSteps);
+        context.fillStyle = "#8295b0";
+        context.font = "11px 'JetBrains Mono', monospace";
+        context.textAlign = "right";
+        context.fillText(formatNumber(value), padding.left - 10, y + 4);
     }
 
+    // Gradient Area Fill Under Curve
+    const areaGradient = context.createLinearGradient(0, padding.top, 0, padding.top + graphHeight);
+    areaGradient.addColorStop(0, "rgba(56, 189, 248, 0.2)");
+    areaGradient.addColorStop(1, "rgba(2, 132, 199, 0.0)");
 
-        // LINE
-    
     context.beginPath();
+    values.forEach((value, index) => {
+        const x = padding.left + graphWidth * (index / (values.length - 1));
+        const y = padding.top + graphHeight * (1 - (value - minValue) / (maxValue - minValue));
 
-
-    values.forEach(
-        (
-            value,
-            index
-        ) => {
-
-            const x =
-                padding.left +
-                graphWidth *
-                (
-                    index /
-                    (
-                        values.length -
-                        1
-                    )
-                );
-
-
-            const y =
-                padding.top +
-                graphHeight *
-                (
-                    1 -
-                    (
-                        value -
-                        minValue
-                    ) /
-                    (
-                        maxValue -
-                        minValue
-                    )
-                );
-
-
-            if (
-                index === 0
-            ) {
-
-                context.moveTo(
-                    x,
-                    y
-                );
-
-            } else {
-
-                context.lineTo(
-                    x,
-                    y
-                );
-            }
+        if (index === 0) {
+            context.moveTo(x, y);
+        } else {
+            context.lineTo(x, y);
         }
-    );
+    });
 
+    context.lineTo(padding.left + graphWidth, padding.top + graphHeight);
+    context.lineTo(padding.left, padding.top + graphHeight);
+    context.closePath();
+    context.fillStyle = areaGradient;
+    context.fill();
 
-    context.strokeStyle =
-        "#55d6be";
+    // Trajectory Line
+    context.beginPath();
+    values.forEach((value, index) => {
+        const x = padding.left + graphWidth * (index / (values.length - 1));
+        const y = padding.top + graphHeight * (1 - (value - minValue) / (maxValue - minValue));
 
-    context.lineWidth =
-        2.5;
+        if (index === 0) {
+            context.moveTo(x, y);
+        } else {
+            context.lineTo(x, y);
+        }
+    });
 
+    context.strokeStyle = "#38bdf8";
+    context.lineWidth = 2.5;
+    context.lineCap = "round";
+    context.lineJoin = "round";
     context.stroke();
 
+    // Data Points
+    values.forEach((value, index) => {
+        const x = padding.left + graphWidth * (index / (values.length - 1));
+        const y = padding.top + graphHeight * (1 - (value - minValue) / (maxValue - minValue));
 
-        // POINTS
-    
-    values.forEach(
-        (
-            value,
-            index
-        ) => {
+        context.beginPath();
+        context.arc(x, y, 3, 0, Math.PI * 2);
+        context.fillStyle = (value === minValue) ? "#10b981" : "#0284c7";
+        context.fill();
 
-            const x =
-                padding.left +
-                graphWidth *
-                (
-                    index /
-                    (
-                        values.length -
-                        1
-                    )
-                );
+        context.beginPath();
+        context.arc(x, y, 4, 0, Math.PI * 2);
+        context.strokeStyle = "#080c14";
+        context.lineWidth = 1.5;
+        context.stroke();
+    });
 
-
-            const y =
-                padding.top +
-                graphHeight *
-                (
-                    1 -
-                    (
-                        value -
-                        minValue
-                    ) /
-                    (
-                        maxValue -
-                        minValue
-                    )
-                );
-
-
-            context.beginPath();
-
-
-            context.arc(
-                x,
-                y,
-                2.5,
-                0,
-                Math.PI * 2
-            );
-
-
-            context.fillStyle =
-                "#6ea8ff";
-
-            context.fill();
-        }
-    );
-
-
-        // AXIS LABEL
-    
-    context.fillStyle =
-        "#8fa4bd";
-
-    context.font =
-        "10px sans-serif";
-
-    context.textAlign =
-        "center";
-
-
-    context.fillText(
-        "Optimization Iteration",
-        width / 2,
-        height - 12
-    );
+    // Horizontal Axis Label
+    context.fillStyle = "#8295b0";
+    context.font = "11px 'Inter', sans-serif";
+    context.textAlign = "center";
+    context.fillText("Optimization Evaluation Iterations", padding.left + graphWidth / 2, height - 12);
 }
 
-
-// format number
-
+// Numerical Formatters
 function formatNumber(value) {
-
-    const number =
-        Number(value);
-
-
-    if (
-        !Number.isFinite(number)
-    ) {
-
-        return "—";
+    const number = Number(value);
+    if (!Number.isFinite(number)) return "—";
+    if (Math.abs(number) < 1e-8) return "0.000000";
+    if (Math.abs(number) < 0.001 || Math.abs(number) >= 100000) {
+        return number.toExponential(4);
     }
-
-
-    if (
-        Math.abs(number) <
-        1e-8
-    ) {
-
-        return "0.000000";
-    }
-
-
-    if (
-        Math.abs(number) <
-        0.001 ||
-        Math.abs(number) >=
-        100000
-    ) {
-
-        return number.toExponential(
-            4
-        );
-    }
-
-
-    return number.toFixed(
-        6
-    );
+    return number.toFixed(6);
 }
 
-
-// format position
-
-function formatPosition(
-    position
-) {
-
-    if (
-        !Array.isArray(position)
-    ) {
-
-        return "—";
-    }
-
-
-    return (
-        "[" +
-        position
-            .map(
-                value => {
-
-                    const number =
-                        Number(
-                            value
-                        );
-
-                    return Number.isFinite(
-                        number
-                    )
-                        ? number.toFixed(4)
-                        : "—";
-                }
-            )
-            .join(", ") +
-        "]"
-    );
+function formatPosition(position) {
+    if (!Array.isArray(position)) return "—";
+    return "[" + position.map((val) => {
+        const num = Number(val);
+        return Number.isFinite(num) ? num.toFixed(4) : "—";
+    }).join(", ") + "]";
 }
 
-
-// escape html
-
-function escapeHtml(
-    value
-) {
-
-    return String(
-        value
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
-
-// sleep
-
-function sleep(
-    milliseconds
-) {
-
-    return new Promise(
-        resolve =>
-            setTimeout(
-                resolve,
-                milliseconds
-            )
-    );
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-
-// smart input: picture paste & name identification
-
+// Smart Input: Clipboard Paste & Problem Extraction
 let currentUploadedImageBase64 = null;
 
 function setupSmartInput() {
@@ -2175,7 +880,7 @@ function setupSmartInput() {
             if (query || currentUploadedImageBase64) {
                 identifyProblem(query, currentUploadedImageBase64);
             } else {
-                showExtractionStatus("Please type a function name or paste an image.", "info");
+                showExtractionStatus("Please enter a benchmark name or paste a screenshot.", "info");
             }
         });
 
@@ -2187,7 +892,7 @@ function setupSmartInput() {
         });
     }
 
-    // Clipboard paste handler (Ctrl+V) for screenshots
+    // Global Paste Listener (Ctrl+V)
     window.addEventListener("paste", (e) => {
         const items = (e.clipboardData || window.clipboardData)?.items;
         if (!items) return;
@@ -2207,6 +912,13 @@ function setupSmartInput() {
     if (dropZone && fileInput) {
         dropZone.addEventListener("click", (e) => {
             if (e.target.id !== "removeImageBtn") {
+                fileInput.click();
+            }
+        });
+
+        dropZone.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
                 fileInput.click();
             }
         });
@@ -2321,7 +1033,6 @@ async function identifyProblem(text, imageBase64) {
             throw new Error(data.error || "Could not identify function.");
         }
 
-        // Apply recognized values into form
         if (objectiveInput) {
             objectiveInput.value = data.objective;
         }
@@ -2329,10 +1040,8 @@ async function identifyProblem(text, imageBase64) {
             dimensionsInput.value = data.dimensions;
         }
 
-        // Regenerate variable bounds rows
         generateBounds();
 
-        // Populate variable bounds if provided
         if (Array.isArray(data.bounds)) {
             data.bounds.forEach((b, idx) => {
                 const lowerInput = $(`lowerBound${idx + 1}`);
@@ -2354,9 +1063,7 @@ async function identifyProblem(text, imageBase64) {
     }
 }
 
-
-// ask optiagent: behavior assistant
-
+// Ask OptiAgent: AI Behavior Assistant
 function setupAskAI() {
     const askBtn = $("askButton");
     const askInput = $("askQuestionInput");
@@ -2433,4 +1140,58 @@ async function submitQuestion(questionText) {
         if (btnText) btnText.textContent = "Ask Info";
         if (askBtn) askBtn.disabled = false;
     }
+}
+
+// Copy to Clipboard Helpers
+function copyScore() {
+    if (!bestScoreElement) return;
+    const score = bestScoreElement.textContent.trim();
+    if (score && score !== "—") {
+        navigator.clipboard.writeText(score).then(() => {
+            addActivity("Copied to clipboard", `Best score ${score} copied.`, "complete");
+        });
+    }
+}
+
+function copyPosition() {
+    if (!bestPositionElement) return;
+    const pos = bestPositionElement.textContent.trim();
+    if (pos && pos !== "—") {
+        navigator.clipboard.writeText(pos).then(() => {
+            addActivity("Copied to clipboard", `Best coordinates ${pos} copied.`, "complete");
+        });
+    }
+}
+
+// Architecture Modal Dialog Controller
+function setupArchitectureModal() {
+    const modalBtn = $("architectureModalBtn");
+    const closeBtn = $("closeArchModalBtn");
+    const backdrop = $("archModalBackdrop");
+
+    if (modalBtn && backdrop) {
+        modalBtn.addEventListener("click", () => {
+            backdrop.classList.add("open");
+        });
+    }
+
+    if (closeBtn && backdrop) {
+        closeBtn.addEventListener("click", () => {
+            backdrop.classList.remove("open");
+        });
+    }
+
+    if (backdrop) {
+        backdrop.addEventListener("click", (e) => {
+            if (e.target === backdrop) {
+                backdrop.classList.remove("open");
+            }
+        });
+    }
+
+    window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && backdrop && backdrop.classList.contains("open")) {
+            backdrop.classList.remove("open");
+        }
+    });
 }

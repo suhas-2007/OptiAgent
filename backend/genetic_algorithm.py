@@ -3,9 +3,11 @@ import numpy as np
 
 class GeneticAlgorithm:
     """
-    Simple continuous Genetic Algorithm for OptiAgent.
+    Continuous Genetic Algorithm for OptiAgent.
 
-    The optimizer minimizes the supplied objective function.
+    Minimizes the supplied objective function with tournament selection,
+    uniform crossover, and Gaussian mutation.
+    Supports optional global-best seeding from previous stages.
     """
 
     def __init__(
@@ -18,39 +20,34 @@ class GeneticAlgorithm:
         mutation_rate=0.1,
         crossover_rate=0.8,
         mutation_scale=0.1,
+        initial_position=None,
     ):
         self.objective_function = objective_function
         self.dimensions = dimensions
         self.bounds = np.asarray(bounds, dtype=float)
 
-        self.population_size = population_size
-        self.generations = generations
-        self.mutation_rate = mutation_rate
-        self.crossover_rate = crossover_rate
-        self.mutation_scale = mutation_scale
+        self.population_size = max(4, int(population_size))
+        self.generations = int(generations)
+        self.mutation_rate = float(mutation_rate)
+        self.crossover_rate = float(crossover_rate)
+        self.mutation_scale = float(mutation_scale)
+
+        self.initial_position = initial_position
 
         self.population = self._initialize_population()
-
         self.personal_best_positions = self.population.copy()
         self.personal_best_scores = np.array(
-            [self.objective_function(x) for x in self.population]
+            [float(self.objective_function(x)) for x in self.population]
         )
 
         best_index = np.argmin(self.personal_best_scores)
-
-        self.global_best_position = (
-            self.personal_best_positions[best_index].copy()
-        )
-        self.global_best_score = float(
-            self.personal_best_scores[best_index]
-        )
-
+        self.global_best_position = self.personal_best_positions[best_index].copy()
+        self.global_best_score = float(self.personal_best_scores[best_index])
         self.history = [self.global_best_score]
 
     def _initialize_population(self):
         lower = self.bounds[:, 0]
         upper = self.bounds[:, 1]
-
         return np.random.uniform(
             lower,
             upper,
@@ -58,30 +55,22 @@ class GeneticAlgorithm:
         )
 
     def _select_parent(self):
-        """
-        Tournament selection.
-        """
+        """Tournament selection."""
         i, j = np.random.randint(0, self.population_size, size=2)
-
         if self.personal_best_scores[i] < self.personal_best_scores[j]:
             return self.population[i].copy()
-
         return self.population[j].copy()
 
     def _crossover(self, parent1, parent2):
         if np.random.random() > self.crossover_rate:
             return parent1.copy()
-
         mask = np.random.random(self.dimensions) < 0.5
-
         child = np.where(mask, parent1, parent2)
-
         return child
 
     def _mutate(self, individual):
         lower = self.bounds[:, 0]
         upper = self.bounds[:, 1]
-
         search_range = upper - lower
 
         for i in range(self.dimensions):
@@ -95,54 +84,53 @@ class GeneticAlgorithm:
 
     def _update_best(self):
         scores = np.array(
-            [self.objective_function(x) for x in self.population]
+            [float(self.objective_function(x)) for x in self.population]
         )
 
         improved = scores < self.personal_best_scores
-
         self.personal_best_scores[improved] = scores[improved]
         self.personal_best_positions[improved] = self.population[improved]
 
         best_index = np.argmin(self.personal_best_scores)
-
-        if (
-            self.personal_best_scores[best_index]
-            < self.global_best_score
-        ):
-            self.global_best_score = float(
-                self.personal_best_scores[best_index]
-            )
-
-            self.global_best_position = (
-                self.personal_best_positions[best_index].copy()
-            )
+        if self.personal_best_scores[best_index] < self.global_best_score:
+            self.global_best_score = float(self.personal_best_scores[best_index])
+            self.global_best_position = self.personal_best_positions[best_index].copy()
 
     def optimize(self):
-        for generation in range(self.generations):
+        # Apply global-best seed if provided
+        if self.initial_position is not None:
+            try:
+                seed = np.clip(
+                    np.asarray(self.initial_position, dtype=float),
+                    self.bounds[:, 0],
+                    self.bounds[:, 1],
+                )
+                self.population[0] = seed
+                self.personal_best_positions[0] = seed.copy()
+                self.personal_best_scores[0] = float(self.objective_function(seed))
+                self._update_best()
+                self.history = [self.global_best_score]
+            except Exception:
+                pass
 
+        for generation in range(self.generations):
             new_population = []
 
             # Preserve the best individual (elitism)
             elite_index = np.argmin(self.personal_best_scores)
-
             new_population.append(
                 self.personal_best_positions[elite_index].copy()
             )
 
             while len(new_population) < self.population_size:
-
                 parent1 = self._select_parent()
                 parent2 = self._select_parent()
-
                 child = self._crossover(parent1, parent2)
                 child = self._mutate(child)
-
                 new_population.append(child)
 
             self.population = np.array(new_population)
-
             self._update_best()
-
             self.history.append(self.global_best_score)
 
         return {

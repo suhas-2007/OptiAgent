@@ -1,8 +1,17 @@
 import os
+import sys
+from pathlib import Path
+import math
 import base64
 import json
 import re
 from dotenv import load_dotenv
+
+# Ensure backend directory is in sys.path
+_backend_dir = str(Path(__file__).resolve().parent)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
 load_dotenv()
 
 from flask import (
@@ -91,16 +100,18 @@ def optimize():
             "objective"
         )
 
-        if not expression:
+        if not expression or not isinstance(expression, str) or not expression.strip():
 
             return jsonify(
                 {
                     "success": False,
                     "error": (
-                        "Missing 'objective'."
+                        "Missing or invalid 'objective' expression."
                     ),
                 }
             ), 400
+
+        expression = expression.strip()
 
         # dimensions
 
@@ -140,14 +151,14 @@ def optimize():
                 }
             ), 400
 
-        if dimensions <= 0:
+        if dimensions <= 0 or dimensions > 50:
 
             return jsonify(
                 {
                     "success": False,
                     "error": (
                         "'dimensions' must be "
-                        "greater than zero."
+                        "between 1 and 50."
                     ),
                 }
             ), 400
@@ -245,6 +256,18 @@ def optimize():
                     }
                 ), 400
 
+            if not math.isfinite(lower) or not math.isfinite(upper):
+
+                return jsonify(
+                    {
+                        "success": False,
+                        "error": (
+                            f"Bounds for x{index} "
+                            "must be finite numbers."
+                        ),
+                    }
+                ), 400
+
             if lower >= upper:
 
                 return jsonify(
@@ -265,13 +288,74 @@ def optimize():
                 )
             )
 
+        # max_stages and patience validation
+
+        try:
+            max_stages = int(
+                data.get("max_stages", 5)
+            )
+            if max_stages < 1 or max_stages > 50:
+                return jsonify(
+                    {
+                        "success": False,
+                        "error": "'max_stages' must be between 1 and 50.",
+                    }
+                ), 400
+        except (TypeError, ValueError):
+            return jsonify(
+                {
+                    "success": False,
+                    "error": "'max_stages' must be an integer.",
+                }
+            ), 400
+
+        try:
+            patience = int(
+                data.get("patience", 3)
+            )
+            if patience < 1 or patience > 50:
+                return jsonify(
+                    {
+                        "success": False,
+                        "error": "'patience' must be between 1 and 50.",
+                    }
+                ), 400
+        except (TypeError, ValueError):
+            return jsonify(
+                {
+                    "success": False,
+                    "error": "'patience' must be an integer.",
+                }
+            ), 400
+
         # safe function
 
-        objective_function = (
-            SafeFunction(
-                expression
+        try:
+            objective_function = (
+                SafeFunction(
+                    expression
+                )
             )
-        )
+            midpoint = [
+                (b[0] + b[1]) / 2.0
+                for b in cleaned_bounds
+            ]
+            test_val = objective_function(midpoint)
+            if not isinstance(test_val, (int, float)):
+                return jsonify(
+                    {
+                        "success": False,
+                        "error": "Objective function must return a scalar number.",
+                    }
+                ), 400
+        except (ValueError, SyntaxError) as exc:
+            return jsonify(
+                {
+                    "success": False,
+                    "error": str(exc),
+                    "error_type": type(exc).__name__,
+                }
+            ), 400
 
         # agent
 
@@ -293,19 +377,9 @@ def optimize():
                 expression
             ),
 
-            max_stages=int(
-                data.get(
-                    "max_stages",
-                    5,
-                )
-            ),
+            max_stages=max_stages,
 
-            patience=int(
-                data.get(
-                    "patience",
-                    3,
-                )
-            ),
+            patience=patience,
         )
 
         # run optimization
@@ -428,13 +502,13 @@ def optimize():
 
     # validation error
 
-    except ValueError as exc:
+    except (ValueError, SyntaxError) as exc:
 
         return jsonify(
             {
                 "success": False,
                 "error": str(exc),
-                "error_type": "ValueError",
+                "error_type": type(exc).__name__,
             }
         ), 400
 
@@ -581,22 +655,23 @@ def extract_problem():
         # 2. Try Gemini multimodal if image or freeform text is provided
         client = _get_gemini_client()
         if client and (text or image_data):
-            contents = []
+            try:
+                contents = []
 
-            if image_data:
-                # parse base64 image (handles data:image/png;base64,... header)
-                if "," in image_data:
-                    header, encoded = image_data.split(",", 1)
-                    mime_match = re.search(r"data:([^;]+);", header)
-                    mime_type = mime_match.group(1) if mime_match else "image/png"
-                else:
-                    encoded = image_data
-                    mime_type = "image/png"
+                if image_data:
+                    # parse base64 image (handles data:image/png;base64,... header)
+                    if "," in image_data:
+                        header, encoded = image_data.split(",", 1)
+                        mime_match = re.search(r"data:([^;]+);", header)
+                        mime_type = mime_match.group(1) if mime_match else "image/png"
+                    else:
+                        encoded = image_data
+                        mime_type = "image/png"
 
-                raw_bytes = base64.b64decode(encoded)
-                contents.append(types.Part.from_bytes(data=raw_bytes, mime_type=mime_type))
+                    raw_bytes = base64.b64decode(encoded)
+                    contents.append(types.Part.from_bytes(data=raw_bytes, mime_type=mime_type))
 
-            prompt = """You are a mathematical optimization parser.
+                prompt = """You are a mathematical optimization parser.
 Analyze this image or question. Extract the objective function to minimize, its dimensions, and reasonable search bounds.
 Objective function MUST be in valid Python math syntax using variables x1, x2, x3... (or x, y).
 Use ** for powers (e.g. x1**2).
@@ -611,39 +686,41 @@ Respond ONLY with a valid JSON object (no markdown code blocks, just raw JSON) w
   "bounds": [[-5.0, 5.0], [-5.0, 5.0]],
   "explanation": "Short 1-2 sentence description of the function and behavior"
 }"""
-            if text:
-                prompt += f"\nUser Question / Query: {text}"
-            contents.append(prompt)
+                if text:
+                    prompt += f"\nUser Question / Query: {text}"
+                contents.append(prompt)
 
-            model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
-            response = client.models.generate_content(
-                model=model,
-                contents=contents
-            )
+                model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+                response = client.models.generate_content(
+                    model=model,
+                    contents=contents
+                )
 
-            raw_text = response.text or ""
-            # strip markdown code blocks if any
-            cleaned_json = re.sub(r"^```json\s*", "", raw_text.strip(), flags=re.MULTILINE)
-            cleaned_json = re.sub(r"^```\s*", "", cleaned_json.strip(), flags=re.MULTILINE)
-            cleaned_json = cleaned_json.strip("` \n")
+                raw_text = response.text or ""
+                # strip markdown code blocks if any
+                cleaned_json = re.sub(r"^```json\s*", "", raw_text.strip(), flags=re.MULTILINE)
+                cleaned_json = re.sub(r"^```\s*", "", cleaned_json.strip(), flags=re.MULTILINE)
+                cleaned_json = cleaned_json.strip("` \n")
 
-            parsed = json.loads(cleaned_json)
-            obj_expr = parsed.get("objective", "").strip()
-            dims = int(parsed.get("dimensions", 2))
-            bounds = parsed.get("bounds", [[-10.0, 10.0]] * dims)
+                parsed = json.loads(cleaned_json)
+                obj_expr = parsed.get("objective", "").strip()
+                dims = int(parsed.get("dimensions", 2))
+                bounds = parsed.get("bounds", [[-10.0, 10.0]] * dims)
 
-            # validate with SafeFunction
-            SafeFunction(obj_expr)([0.0] * dims)
+                # validate with SafeFunction
+                SafeFunction(obj_expr)([0.0] * dims)
 
-            return jsonify({
-                "success": True,
-                "source": "gemini",
-                "name": parsed.get("name", "Extracted Optimization Problem"),
-                "objective": obj_expr,
-                "dimensions": dims,
-                "bounds": bounds,
-                "explanation": parsed.get("explanation", "Extracted from question.")
-            })
+                return jsonify({
+                    "success": True,
+                    "source": "gemini",
+                    "name": parsed.get("name", "Extracted Optimization Problem"),
+                    "objective": obj_expr,
+                    "dimensions": dims,
+                    "bounds": bounds,
+                    "explanation": parsed.get("explanation", "Extracted from question.")
+                })
+            except Exception as gemini_err:
+                print(f"[API] Gemini extraction failed, falling through: {gemini_err}")
 
         # 3. Fallback: if user typed something like a simple equation
         if text:
@@ -774,8 +851,13 @@ Focus on how the algorithm or function behaves, its convergence properties, land
         return jsonify({
             "success": False,
             "error": str(e)
-        }), 500# START SERVER
+        }), 500
+
+
+# START SERVER
 if __name__ == "__main__":
+
+    port = int(os.getenv("PORT", 5000))
 
     print()
     print("=" * 60)
@@ -787,13 +869,13 @@ if __name__ == "__main__":
     print()
 
     print(
-        "Server: http://127.0.0.1:5000"
+        f"Server: http://127.0.0.1:{port}"
     )
 
     print()
 
     app.run(
         host="0.0.0.0",
-        port=5000,
+        port=port,
         debug=False,
     )
