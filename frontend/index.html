@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="OptiAgent — Autonomous Agentic Numerical Optimization Studio with Dynamic Multi-Stage AI Reasoning and Validation">
     <title>OptiAgent — Autonomous Optimization Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -13,23 +16,21 @@
 
     <!-- Top Navigation Bar -->
     <header class="topbar">
-        <a href="#" class="brand">
-            <div class="brand-icon">OA</div>
-            <div class="brand-meta">
-                <h1>
-                    OptiAgent
-                    <span class="version-pill">v1.0</span>
-                </h1>
-                <p>Autonomous Dynamic Optimization</p>
-            </div>
+        <a href="#" class="brand" aria-label="OptiAgent Home">
+            <span class="brand-badge">OA</span>
+            <span class="brand-text">
+                <span class="brand-title">OptiAgent</span>
+                <span class="version-pill">v1.0</span>
+                <span class="brand-subtitle">Autonomous Dynamic Optimization</span>
+            </span>
         </a>
 
         <div class="topbar-actions">
             <button id="architectureModalBtn" type="button" class="nav-link-btn" title="View System Architecture">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
                 <span>How It Works</span>
             </button>
@@ -44,24 +45,21 @@
     <!-- Main Application Container -->
     <main class="container">
 
-        <!-- Hero Strip -->
+        <!-- Hero Section -->
         <section class="hero">
             <div class="hero-main">
                 <div class="eyebrow">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                    </svg>
-                    Autonomous Agentic Cycle
+                    Autonomous Agentic Optimization
                 </div>
-                <h2>Adaptive Numerical <span>Optimization Studio</span></h2>
+                <h2>Adaptive Numerical Optimization Studio</h2>
                 <p>
-                    OptiAgent analyzes continuous mathematical landscapes, autonomously selects appropriate optimization strategies, 
-                    monitors real-time convergence, validates solutions independently, and adapts hyperparameters dynamically.
+                    Autonomous multi-stage numerical optimization. OptiAgent analyzes mathematical landscapes,
+                    selects suitable search strategies, monitors real-time convergence, and adapts dynamically.
                 </p>
             </div>
             <div class="hero-badge-strip">
-                <span class="spec-badge">Engine: <strong>Gemini AFC + Fallback</strong></span>
-                <span class="spec-badge">Optimizers: <strong>8 Algorithmic Classes</strong></span>
+                <span class="spec-badge">Engine: <strong>Gemini AFC + Local Fallback</strong></span>
+                <span class="spec-badge">Optimizers: <strong>7 Algorithmic Classes</strong></span>
                 <span class="spec-badge">Verifier: <strong>Independent AST Validator</strong></span>
             </div>
         </section>
@@ -248,7 +246,7 @@
                     <!-- Variable Bounds Table -->
                     <div class="form-group" style="margin-top:14px; margin-bottom:0;">
                         <label>
-                            <span>Search Space Bounds $[x_{min}, x_{max}]$</span>
+                            <span>Search Space Bounds [min, max]</span>
                             <span class="label-hint">Auto-scales with dimension</span>
                         </label>
                         <div class="bounds-table-wrapper">
@@ -341,16 +339,16 @@
                     <div class="result-grid">
                         <div class="result-item">
                             <div class="result-item-header">
-                                <span>Best Score $f(x^*)$</span>
-                                <button type="button" class="copy-mini-btn" onclick="copyScore()" title="Copy score">Copy</button>
+                                <span class="result-item-label">Best Score f(x*)</span>
+                                <button id="copyScoreBtn" type="button" class="copy-mini-btn" onclick="copyScore()" title="Copy score" disabled>Copy</button>
                             </div>
                             <strong id="bestScore" class="highlight-score">—</strong>
                         </div>
 
                         <div class="result-item">
                             <div class="result-item-header">
-                                <span>Best Coordinates $x^*$</span>
-                                <button type="button" class="copy-mini-btn" onclick="copyPosition()" title="Copy coordinates">Copy</button>
+                                <span class="result-item-label">Best Coordinates x*</span>
+                                <button id="copyPosBtn" type="button" class="copy-mini-btn" onclick="copyPosition()" title="Copy coordinates" disabled>Copy</button>
                             </div>
                             <strong id="bestPosition">—</strong>
                         </div>

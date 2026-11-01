@@ -407,6 +407,11 @@ async function runOptimization() {
         clearActivity();
         setActivityStatus("Running");
 
+        const copyScoreBtn = $("copyScoreBtn");
+        if (copyScoreBtn) copyScoreBtn.disabled = true;
+        const copyPosBtn = $("copyPosBtn");
+        if (copyPosBtn) copyPosBtn.disabled = true;
+
         if (agentBadge) {
             agentBadge.textContent = "RUNNING";
             agentBadge.classList.remove("complete");
@@ -599,6 +604,16 @@ function displayResult(data) {
         bestPositionElement.textContent = formatPosition(data.best_position);
     }
 
+    // Enable copy buttons when result is valid
+    const copyScoreBtn = $("copyScoreBtn");
+    if (copyScoreBtn) {
+        copyScoreBtn.disabled = !Number.isFinite(Number(data.best_score));
+    }
+    const copyPosBtn = $("copyPosBtn");
+    if (copyPosBtn) {
+        copyPosBtn.disabled = !Array.isArray(data.best_position) || data.best_position.length === 0;
+    }
+
     const stages = Array.isArray(data.stage_history) ? data.stage_history : [];
     if (stageCountElement) {
         stageCountElement.textContent = stages.length;
@@ -747,7 +762,7 @@ function drawConvergenceChart(data) {
     }
 
     // Draw Subtle Horizontal Grid Lines & Values
-    context.strokeStyle = "#1c273c";
+    context.strokeStyle = "#DCE1E8";
     context.lineWidth = 1;
 
     const gridSteps = 5;
@@ -760,16 +775,16 @@ function drawConvergenceChart(data) {
         context.stroke();
 
         const value = maxValue - (maxValue - minValue) * (i / gridSteps);
-        context.fillStyle = "#8295b0";
+        context.fillStyle = "#526175";
         context.font = "11px 'JetBrains Mono', monospace";
         context.textAlign = "right";
         context.fillText(formatNumber(value), padding.left - 10, y + 4);
     }
 
-    // Gradient Area Fill Under Curve
+    // Gradient Area Fill Under Curve (Indigo Accent)
     const areaGradient = context.createLinearGradient(0, padding.top, 0, padding.top + graphHeight);
-    areaGradient.addColorStop(0, "rgba(56, 189, 248, 0.2)");
-    areaGradient.addColorStop(1, "rgba(2, 132, 199, 0.0)");
+    areaGradient.addColorStop(0, "rgba(67, 56, 202, 0.12)");
+    areaGradient.addColorStop(1, "rgba(67, 56, 202, 0.0)");
 
     context.beginPath();
     values.forEach((value, index) => {
@@ -789,7 +804,7 @@ function drawConvergenceChart(data) {
     context.fillStyle = areaGradient;
     context.fill();
 
-    // Trajectory Line
+    // Trajectory Line (Deep Indigo #4338CA)
     context.beginPath();
     values.forEach((value, index) => {
         const x = padding.left + graphWidth * (index / (values.length - 1));
@@ -802,7 +817,7 @@ function drawConvergenceChart(data) {
         }
     });
 
-    context.strokeStyle = "#38bdf8";
+    context.strokeStyle = "#4338CA";
     context.lineWidth = 2.5;
     context.lineCap = "round";
     context.lineJoin = "round";
@@ -815,19 +830,21 @@ function drawConvergenceChart(data) {
 
         context.beginPath();
         context.arc(x, y, 3, 0, Math.PI * 2);
-        context.fillStyle = (value === minValue) ? "#10b981" : "#0284c7";
+        context.fillStyle = (value === minValue) ? "#166534" : "#4338CA";
         context.fill();
 
         context.beginPath();
         context.arc(x, y, 4, 0, Math.PI * 2);
-        context.strokeStyle = "#080c14";
+        context.strokeStyle = "#FFFFFF";
         context.lineWidth = 1.5;
         context.stroke();
     });
 
     // Horizontal Axis Label
-    context.fillStyle = "#8295b0";
-    context.font = "11px 'Inter', sans-serif";
+    context.fillStyle = "#526175";
+    context.font = "12px 'Inter', sans-serif";
+    context.textAlign = "center";
+    context.fillText("Optimization Evaluation Iterations", padding.left + graphWidth / 2, height - 12);
     context.textAlign = "center";
     context.fillText("Optimization Evaluation Iterations", padding.left + graphWidth / 2, height - 12);
 }
