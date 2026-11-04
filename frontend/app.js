@@ -205,16 +205,28 @@ async function checkAPI() {
     }
 }
 
+let activeRastriginExpression = null;
+function rastriginExpression(dimensions) {
+    const variables = Array.from({length: dimensions}, (_, i) => `x${i+1}`);
+    return `${10*dimensions} + ` + variables.map(x => `${x}**2 - 10*cos(2*pi*${x})`).join(' + ');
+}
+
 // Generate Variable Bounds dynamically
 function generateBounds() {
     if (!dimensionsInput || !boundsContainer) return;
 
     const dimensions = parseInt(dimensionsInput.value, 10);
-    if (!Number.isInteger(dimensions) || dimensions < 1 || dimensions > 50) {
+    if (!Number.isInteger(dimensions) || dimensions < 1 || dimensions > 100) {
         boundsContainer.innerHTML = "";
         return;
     }
 
+    const oldBounds = [...boundsContainer.querySelectorAll('.bound-row')].map(row => [row.querySelector('.lower-bound').value, row.querySelector('.upper-bound').value]);
+    const scalable = activeRastriginExpression !== null && objectiveInput.value === activeRastriginExpression;
+    if (scalable) {
+        activeRastriginExpression = rastriginExpression(dimensions);
+        objectiveInput.value = activeRastriginExpression;
+    }
     boundsContainer.innerHTML = "";
 
     for (let i = 1; i <= dimensions; i++) {
@@ -245,6 +257,13 @@ function generateBounds() {
             >
         `;
 
+        if (oldBounds[i-1]) {
+            row.querySelector('.lower-bound').value = oldBounds[i-1][0];
+            row.querySelector('.upper-bound').value = oldBounds[i-1][1];
+        } else if (scalable) {
+            row.querySelector('.lower-bound').value = '-5.12';
+            row.querySelector('.upper-bound').value = '5.12';
+        }
         boundsContainer.appendChild(row);
     }
 }
@@ -255,7 +274,14 @@ function setExample(expression) {
 
     const key = String(expression).toLowerCase().trim();
     if (PRESET_BENCHMARKS[key]) {
-        const preset = PRESET_BENCHMARKS[key];
+        let preset = PRESET_BENCHMARKS[key];
+        activeRastriginExpression = null;
+        if (key === 'rastrigin') {
+            const n = Math.min(100, Math.max(1, parseInt(dimensionsInput.value, 10) || 2));
+            preset = {...preset, objective: rastriginExpression(n), dimensions: n,
+                      bounds: Array.from({length: n}, () => [-5.12, 5.12])};
+            activeRastriginExpression = preset.objective;
+        }
         objectiveInput.value = preset.objective;
 
         if (dimensionsInput) {
@@ -443,8 +469,8 @@ async function runOptimization() {
             throw new Error("Please enter an objective function expression.");
         }
 
-        if (!Number.isInteger(dimensions) || dimensions < 1 || dimensions > 50) {
-            throw new Error("Number of dimensions must be between 1 and 50.");
+        if (!Number.isInteger(dimensions) || dimensions < 1 || dimensions > 100) {
+            throw new Error("Number of dimensions must be between 1 and 100.");
         }
 
         if (!Number.isInteger(maxStages) || maxStages < 1 || maxStages > 20) {
@@ -539,7 +565,7 @@ async function runOptimization() {
             setActivityStatus("Complete");
         }
 
-        addActivity("Optimization complete", `Optimal minimum score ${formatNumber(data.best_score)} successfully located.`, "complete");
+        addActivity("Search complete", `Best-found score ${formatNumber(data.best_score)}. Global optimality is not certified.`, "complete");
 
         displayResult(data);
         window.lastOptimizationResult = data;
@@ -604,6 +630,13 @@ function extractRecommendation(data) {
 
 // Display results in UI
 function displayResult(data) {
+    const outcome = $("searchOutcome");
+    if (outcome) outcome.textContent = [
+        data.termination_reason ? data.termination_reason.replaceAll('_', ' ') : 'Search complete',
+        data.evaluations ? `${data.evaluations} search evaluations` : '',
+        ...(data.warnings || ['Global optimality is not certified.'])
+    ].filter(Boolean).join(' · ');
+
     if (bestScoreElement) {
         bestScoreElement.textContent = formatNumber(data.best_score);
     }
@@ -852,9 +885,9 @@ function drawConvergenceChart(data) {
     context.fillStyle = "#526175";
     context.font = "12px 'Inter', sans-serif";
     context.textAlign = "center";
-    context.fillText("Optimization Evaluation Iterations", padding.left + graphWidth / 2, height - 12);
+    context.fillText("Recorded search progress", padding.left + graphWidth / 2, height - 12);
     context.textAlign = "center";
-    context.fillText("Optimization Evaluation Iterations", padding.left + graphWidth / 2, height - 12);
+    context.fillText("Recorded search progress", padding.left + graphWidth / 2, height - 12);
 }
 
 // Numerical Formatters

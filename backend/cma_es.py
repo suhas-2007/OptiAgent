@@ -19,6 +19,7 @@ class CMAES:
         max_iterations=None,
         sigma=0.5,
         initial_position=None,
+        seed=None,
     ):
         self.objective_function = objective_function
         self.dimensions = dimensions
@@ -35,6 +36,7 @@ class CMAES:
         self.initial_sigma = self.sigma
 
         self.initial_position = initial_position
+        self.rng = np.random.default_rng(seed)
 
         self.mean = (
             self.bounds[:, 0]
@@ -51,6 +53,7 @@ class CMAES:
         )
 
     def _initialize(self):
+        self.sigma = self.initial_sigma
         if self.initial_position is not None:
             try:
                 self.mean = self._clip(
@@ -72,6 +75,8 @@ class CMAES:
 
     def optimize(self):
         self._initialize()
+        if self.dimensions > 20:
+            return self._optimize_diagonal()
 
         mean = self.mean.copy()
         covariance = self.covariance.copy()
@@ -81,7 +86,7 @@ class CMAES:
         for iteration in range(self.max_iterations):
             # Generate candidate population with covariance
             try:
-                population = np.random.multivariate_normal(
+                population = self.rng.multivariate_normal(
                     mean,
                     (self.sigma ** 2) * covariance,
                     size=self.population_size,
@@ -89,7 +94,7 @@ class CMAES:
             except (np.linalg.LinAlgError, ValueError):
                 # Numerical safety fallback to identity covariance
                 covariance = np.eye(self.dimensions)
-                population = np.random.multivariate_normal(
+                population = self.rng.multivariate_normal(
                     mean,
                     (self.sigma ** 2) * covariance,
                     size=self.population_size,
@@ -160,3 +165,21 @@ class CMAES:
             "best_score": float(best_score),
             "history": self.history,
         }
+
+    def _optimize_diagonal(self):
+        """Linear-memory diagonal evolution for large dimensions (not full CMA-ES)."""
+        mean = self.mean.copy()
+        variance = ((self.bounds[:, 1]-self.bounds[:, 0])*0.2)**2
+        best_position = mean.copy()
+        best_score = float(self.objective_function(mean))
+        for _ in range(self.max_iterations):
+            population = self._clip(mean + self.rng.normal(size=(self.population_size, self.dimensions))*np.sqrt(variance))
+            scores = np.array([self.objective_function(point) for point in population])
+            order = np.argsort(scores)
+            if scores[order[0]] < best_score:
+                best_position, best_score = population[order[0]].copy(), float(scores[order[0]])
+            elite = population[order[:max(2, self.population_size//2)]]
+            mean = elite.mean(axis=0)
+            variance = np.maximum(0.8*variance+0.2*elite.var(axis=0), 1e-12)
+            self.history.append(best_score)
+        return {'best_position':best_position, 'best_score':best_score, 'history':self.history}

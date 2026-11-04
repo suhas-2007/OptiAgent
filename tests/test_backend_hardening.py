@@ -116,11 +116,11 @@ def test_optimize_dimensions_out_of_range(client):
     })
     assert res0.status_code == 400
 
-    # dimensions > 50
+    # dimensions > 100
     res_large = client.post("/optimize", json={
         "objective": "x1**2",
-        "dimensions": 100,
-        "bounds": [[-1, 1]] * 100
+        "dimensions": 101,
+        "bounds": [[-1, 1]] * 101
     })
     assert res_large.status_code == 400
 

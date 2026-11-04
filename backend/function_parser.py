@@ -129,6 +129,8 @@ class SafeFunction:
 
             if len(node.args) != 1:
                 raise ValueError(f"{function_name}() accepts exactly one argument.")
+            if node.keywords:
+                raise ValueError('Keyword arguments are not allowed in mathematical functions.')
 
             argument = self._evaluate(node.args[0], variables)
 

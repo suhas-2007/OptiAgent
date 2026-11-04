@@ -150,6 +150,7 @@ input:focus { border-color:var(--focus-ring); }
 .result-item strong { display:block; font:600 18px/1.5 var(--font-mono); overflow-wrap:anywhere; }
 .result-item:nth-child(n+3) strong { font-size:15px; }
 .result-item .highlight-score { font-size:25px; letter-spacing:-1px; }
+#bestPosition { max-height:140px; overflow:auto; font-size:13px; }
 .copy-mini-btn { font-size:10px; padding:3px 6px; border:1px solid var(--border-color); border-radius:4px; background:white; color:var(--text-secondary); }
 .copy-mini-btn:hover:not(:disabled) { background:var(--surface-selected); color:var(--primary); }
 .convergence-card .card-header { margin-bottom:10px; }

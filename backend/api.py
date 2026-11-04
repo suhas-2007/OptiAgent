@@ -132,6 +132,8 @@ def optimize():
 
         try:
 
+            if isinstance(dimensions, bool) or not str(dimensions).isdigit():
+                raise ValueError('Dimensions must be an integer.')
             dimensions = int(
                 dimensions
             )
@@ -151,14 +153,14 @@ def optimize():
                 }
             ), 400
 
-        if dimensions <= 0 or dimensions > 50:
+        if dimensions <= 0 or dimensions > 100:
 
             return jsonify(
                 {
                     "success": False,
                     "error": (
                         "'dimensions' must be "
-                        "between 1 and 50."
+                        "between 1 and 100."
                     ),
                 }
             ), 400
@@ -357,6 +359,29 @@ def optimize():
                 }
             ), 400
 
+        # Bounded search controls. Existing requests keep dimension-aware defaults.
+        def bounded_integer(name, default, lower, upper):
+            value = data.get(name, default)
+            if value is None:
+                return None
+            if isinstance(value, bool) or not str(value).lstrip('-').isdigit():
+                raise ValueError(f"'{name}' must be an integer.")
+            value = int(value)
+            if not lower <= value <= upper:
+                raise ValueError(f"'{name}' must be between {lower} and {upper}.")
+            return value
+        max_evaluations = bounded_integer('max_evaluations', None, 100, 500000)
+        random_seed = bounded_integer('random_seed', None, 0, 2147483647)
+        time_limit = data.get('time_limit_seconds', 45)
+        if isinstance(time_limit, bool):
+            raise ValueError("'time_limit_seconds' must be numeric.")
+        try:
+            time_limit = float(time_limit)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("'time_limit_seconds' must be numeric.") from exc
+        if not math.isfinite(time_limit) or not 0 < time_limit <= 90:
+            raise ValueError("'time_limit_seconds' must be greater than 0 and at most 90.")
+
         # agent
 
         agent = OptimizationAgent(
@@ -380,6 +405,9 @@ def optimize():
             max_stages=max_stages,
 
             patience=patience,
+            max_evaluations=max_evaluations,
+            time_limit_seconds=time_limit,
+            random_seed=random_seed,
         )
 
         # run optimization
@@ -412,6 +440,17 @@ def optimize():
             best_position = list(
                 best_position
             )
+
+        import ast
+        used_names = {node.id for node in ast.walk(objective_function.tree) if isinstance(node, ast.Name)}
+        used_indices = set()
+        for name in used_names:
+            if name.startswith('x') and name[1:].isdigit(): used_indices.add(int(name[1:]))
+            elif name in ('x','y','z'): used_indices.add(('x','y','z').index(name)+1)
+        unused = [f'x{i}' for i in range(1, dimensions+1) if i not in used_indices]
+        warnings = list(result.get('warnings', []))
+        if unused:
+            warnings.append('Objective does not depend on these declared variables: '+', '.join(unused))
 
         # response
 
@@ -459,6 +498,14 @@ def optimize():
                     ]
                 ),
 
+                "termination_reason": result.get("termination_reason", "stage_limit"),
+                "global_optimum_certified": result.get("global_optimum_certified", False),
+                "evaluations": result.get("evaluations", 0),
+                "objective_evaluations": result.get("objective_evaluations", 0),
+                "component_evaluations": result.get("component_evaluations", 0),
+                "elapsed_seconds": result.get("elapsed_seconds", 0),
+                "warnings": warnings,
+                "unused_variables": unused,
                 "recommendation": (
                     result.get(
                         "recommendation",

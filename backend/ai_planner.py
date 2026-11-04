@@ -935,6 +935,9 @@ confidence
             max_attempts + 1,
         ):
 
+            if time.monotonic() >= getattr(self, 'deadline', float('inf')):
+                raise RuntimeError('Strategy selection time budget exhausted.')
+
             try:
 
                 print()
@@ -948,6 +951,12 @@ confidence
 
                 config = (
                     types.GenerateContentConfig(
+
+                        http_options=types.HttpOptions(
+                            timeout=max(1, int(min(10.0, max(0.001,
+                                getattr(self, 'deadline', time.monotonic()+10)-time.monotonic()))*1000)),
+                            retry_options=types.HttpRetryOptions(attempts=1),
+                        ),
 
                         temperature=0.1,
 

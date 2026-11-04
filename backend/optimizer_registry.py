@@ -50,6 +50,7 @@ class OptimizerRegistry:
         objective_function,
         dimensions,
         bounds,
+        seed=None,
     ):
         """Create an optimizer by name."""
 
@@ -60,6 +61,14 @@ class OptimizerRegistry:
                 f"Available: {self.available_algorithms()}"
             )
 
+        if name == "Differential Evolution":
+            return DifferentialEvolution(objective_function, dimensions, bounds, seed=seed)
+        if name == "PSO":
+            return ParticleSwarmOptimizer(objective_function, dimensions, bounds,
+                                          num_particles=min(300, max(50, 5*dimensions)),
+                                          max_iterations=300, seed=seed)
+        if name == "CMA-ES":
+            return CMAES(objective_function, dimensions, bounds, generations=200, seed=seed)
         return self.algorithms[name](
             objective_function,
             dimensions,

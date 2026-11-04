@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="OptiAgent — Autonomous Agentic Numerical Optimization Studio with Dynamic Multi-Stage AI Reasoning and Validation">
     <title>OptiAgent — Autonomous Optimization Studio</title>
-    <link rel="stylesheet" href="style.css?v=20261101">
+    <link rel="stylesheet" href="style.css?v=20261104">
 </head>
 
 <body>
@@ -211,9 +211,9 @@
                         <div class="form-group" style="margin-bottom:0;">
                             <label for="dimensions">
                                 <span>Dimensions</span>
-                                <span class="label-hint">1–50</span>
+                                <span class="label-hint">1–100</span>
                             </label>
-                            <input id="dimensions" type="number" value="2" min="1" max="50">
+                            <input id="dimensions" type="number" value="2" min="1" max="100">
                         </div>
 
                         <div class="form-group" style="margin-bottom:0;">
@@ -323,7 +323,7 @@
                         <div class="card-title-group">
                             <span class="label">03 / RESULTS</span>
                             <h3>Best solution</h3>
-                            <span class="card-subtitle">Best-found score and coordinates from your search.</span>
+                            <span class="card-subtitle">Best-found score and coordinates from your search.</span><p id="searchOutcome" class="card-subtitle" role="status"></p>
                         </div>
                     </div>
 
@@ -368,7 +368,7 @@
                     <div class="card-title-group">
                         <span class="label">SEARCH PERFORMANCE</span>
                         <h3>Convergence</h3>
-                        <span class="card-subtitle">Objective function value vs. iteration count</span>
+                        <span class="card-subtitle">Best score across recorded search progress</span>
                     </div>
                     <span id="convergenceStatus" class="small-status">No data yet</span>
                 </div>
@@ -544,7 +544,7 @@
 
 
     <!-- JavaScript Execution Engine -->
-    <script src="app.js?v=20261101"></script>
+    <script src="app.js?v=20261104"></script>
 
 </body>
 
