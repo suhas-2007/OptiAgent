@@ -167,6 +167,12 @@ document.addEventListener("DOMContentLoaded", () => {
     setupSmartInput();
     setupAskAI();
     setupArchitectureModal();
+    const upload = $("dropZone");
+    if (upload) upload.addEventListener("keydown", e => {
+        if (e.target === upload && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault(); $("imageFileInput").click();
+        }
+    });
 });
 
 // API Health Check
@@ -225,6 +231,7 @@ function generateBounds() {
                 value="-10"
                 step="any"
                 placeholder="Lower [min]"
+                aria-label="Lower bound for x${i}"
             >
             <input
                 id="upperBound${i}"
@@ -234,6 +241,7 @@ function generateBounds() {
                 value="10"
                 step="any"
                 placeholder="Upper [max]"
+                aria-label="Upper bound for x${i}"
             >
         `;
 
@@ -1180,35 +1188,34 @@ function copyPosition() {
     }
 }
 
-// Architecture Modal Dialog Controller
+// Accessible architecture dialog; API and optimization behavior are unchanged.
 function setupArchitectureModal() {
     const modalBtn = $("architectureModalBtn");
     const closeBtn = $("closeArchModalBtn");
     const backdrop = $("archModalBackdrop");
-
-    if (modalBtn && backdrop) {
-        modalBtn.addEventListener("click", () => {
-            backdrop.classList.add("open");
-        });
+    if (!modalBtn || !closeBtn || !backdrop) return;
+    let previousFocus;
+    function close() {
+        backdrop.classList.remove("open");
+        document.body.classList.remove("dialog-open");
+        if (previousFocus) previousFocus.focus();
     }
-
-    if (closeBtn && backdrop) {
-        closeBtn.addEventListener("click", () => {
-            backdrop.classList.remove("open");
-        });
-    }
-
-    if (backdrop) {
-        backdrop.addEventListener("click", (e) => {
-            if (e.target === backdrop) {
-                backdrop.classList.remove("open");
-            }
-        });
-    }
-
-    window.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && backdrop && backdrop.classList.contains("open")) {
-            backdrop.classList.remove("open");
+    modalBtn.addEventListener("click", () => {
+        previousFocus = document.activeElement;
+        backdrop.classList.add("open");
+        document.body.classList.add("dialog-open");
+        closeBtn.focus();
+    });
+    closeBtn.addEventListener("click", close);
+    backdrop.addEventListener("click", e => { if (e.target === backdrop) close(); });
+    document.addEventListener("keydown", e => {
+        if (!backdrop.classList.contains("open")) return;
+        if (e.key === "Escape") close();
+        if (e.key === "Tab") {
+            const items = [...backdrop.querySelectorAll('button, a[href], input, [tabindex="0"]')];
+            const first = items[0], last = items[items.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
         }
     });
 }

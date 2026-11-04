@@ -6,13 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="OptiAgent — Autonomous Agentic Numerical Optimization Studio with Dynamic Multi-Stage AI Reasoning and Validation">
     <title>OptiAgent — Autonomous Optimization Studio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20261101">
 </head>
 
 <body>
+    <a class="skip-link" href="#workspace">Skip to workspace</a>
 
     <!-- Top Navigation Bar -->
     <header class="topbar">
@@ -21,10 +19,11 @@
             <span class="brand-text">
                 <span class="brand-title">OptiAgent</span>
                 <span class="version-pill">v1.0</span>
-                <span class="brand-subtitle">Autonomous Dynamic Optimization</span>
+                <span class="brand-subtitle">Numerical optimization</span>
             </span>
         </a>
 
+        <nav class="workspace-nav" aria-label="Workspace navigation"><a href="#workspace">Workspace</a><a href="#execution">Execution log</a><a href="#insights">Insights</a></nav>
         <div class="topbar-actions">
             <button id="architectureModalBtn" type="button" class="nav-link-btn" title="View System Architecture">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -45,31 +44,23 @@
     <!-- Main Application Container -->
     <main class="container">
 
-        <!-- Hero Section -->
-        <section class="hero">
+        <section class="hero" aria-labelledby="pageTitle">
             <div class="hero-main">
-                <div class="eyebrow">
-                    Autonomous Agentic Optimization
-                </div>
-                <h2>Adaptive Numerical Optimization Studio</h2>
-                <p>
-                    Autonomous multi-stage numerical optimization. OptiAgent analyzes mathematical landscapes,
-                    selects suitable search strategies, monitors real-time convergence, and adapts dynamically.
-                </p>
+                <div class="eyebrow">OPTIAGENT WORKSPACE</div>
+                <h1 id="pageTitle">Numerical optimization</h1>
+                <p>Define your objective. Let the agent select, test, and adapt the search strategy.</p>
             </div>
-            <div class="hero-badge-strip">
-                <span class="spec-badge">Engine: <strong>Gemini AFC + Local Fallback</strong></span>
-                <span class="spec-badge">Optimizers: <strong>7 Algorithmic Classes</strong></span>
-                <span class="spec-badge">Verifier: <strong>Independent AST Validator</strong></span>
+            <div class="hero-badge-strip" aria-label="Engine details">
+                <span class="spec-badge"><span class="spec-dot"></span>Gemini + local fallback</span>
+                <span class="spec-badge">Independent solution validation</span>
             </div>
         </section>
-
 
         <!-- Autonomous Decision Pipeline Stepper -->
         <section class="pipeline-card" aria-label="Agent Execution Pipeline">
             <div class="pipeline-header">
-                <h3>Autonomous Closed-Loop Pipeline</h3>
-                <span class="pipeline-legend">Real-Time Stage Telemetry</span>
+                <h3>The agent cycle</h3>
+                <span class="pipeline-legend">Observe → optimize → adapt</span>
             </div>
 
             <div class="pipeline">
@@ -141,7 +132,7 @@
 
 
         <!-- Two-Column Workbench Grid -->
-        <div class="dashboard-grid">
+        <div class="dashboard-grid" id="workspace">
 
             <!-- LEFT COLUMN: Problem Definition & Search Space -->
             <div class="setup-column">
@@ -149,9 +140,9 @@
                 <section class="card">
                     <div class="card-header">
                         <div class="card-title-group">
-                            <span class="label">PROBLEM FORMULATION</span>
-                            <h3>Optimization Setup</h3>
-                            <span class="card-subtitle">Define objective, dimension constraints, and variable bounds</span>
+                            <span class="label">01 / CONFIGURE</span>
+                            <h3>Set up your search</h3>
+                            <span class="card-subtitle">Choose a function and define where to search.</span>
                         </div>
                     </div>
 
@@ -159,14 +150,14 @@
                     <div class="smart-input-box">
                         <div class="smart-input-header">
                             <div class="smart-badge-group">
-                                <span class="smart-badge">SMART OCR</span>
-                                <span class="smart-title">Paste Screenshot or Name</span>
+                                <span class="smart-badge">IMPORT</span>
+                                <span class="smart-title">Start with a name or screenshot</span>
                             </div>
-                            <span class="smart-hint">Ctrl+V anywhere to paste</span>
+                            <span class="smart-hint">Or enter an expression below</span>
                         </div>
 
                         <div class="smart-search-row">
-                            <input id="smartFunctionQuery" type="text" placeholder='Type benchmark e.g. "rosenbrock", "ackley", "rastrigin"...' autocomplete="off">
+                            <input id="smartFunctionQuery" aria-label="Benchmark name" type="text" placeholder='Type benchmark e.g. "rosenbrock", "ackley", "rastrigin"...' autocomplete="off">
                             <button id="identifyButton" type="button" class="secondary-btn">
                                 <span id="identifyBtnText">Identify</span>
                                 <span id="identifyBtnLoader" class="loader hidden"></span>
@@ -176,7 +167,7 @@
                         <div id="dropZone" class="paste-zone" tabindex="0" role="button" aria-label="Drop screenshot or click to upload">
                             <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
                             <div id="dropZonePrompt" class="paste-zone-prompt">
-                                <span class="paste-icon">📷</span>
+                                <span class="paste-icon" aria-hidden="true">＋</span>
                                 <span><strong>Paste problem screenshot (<span class="kbd-shortcut">Ctrl+V</span>)</strong> or click to upload</span>
                             </div>
                             <div id="imagePreviewContainer" class="image-preview-container hidden">
@@ -192,7 +183,7 @@
                     <!-- Objective Function Input -->
                     <div class="form-group">
                         <label for="objective">
-                            <span>Objective Function $f(x)$</span>
+                            <span>Objective function f(x)</span>
                             <span class="label-hint">Python math syntax (x1, x2...)</span>
                         </label>
                         <input id="objective" class="code-input" type="text" value="x1**2 + x2**2" autocomplete="off" spellcheck="false">
@@ -200,7 +191,7 @@
 
                     <!-- Benchmark Examples -->
                     <div class="preset-section">
-                        <div class="preset-header">Benchmark Presets:</div>
+                        <div class="preset-header">Or try a benchmark</div>
                         <div class="examples">
                             <button type="button" onclick="setExample('sphere')" title="Convex smooth quadratic test">Sphere</button>
                             <button type="button" onclick="setExample('rosenbrock')" title="Narrow curved valley test (Nelder-Mead benchmark)">Rosenbrock</button>
@@ -289,16 +280,16 @@
             </div>
 
 
-            <!-- RIGHT COLUMN: Agent Reasoning, Telemetry & Results -->
+            <!-- Search output -->
             <div class="results-column">
 
-                <!-- AI Brain & Strategy Decision Card -->
+                <!-- AI Brain & Agent strategy Card -->
                 <section class="card ai-card">
                     <div class="card-header">
                         <div class="card-title-group">
-                            <span class="label">AGENT REASONING ENGINE</span>
-                            <h3>Strategy Decision</h3>
-                            <span class="card-subtitle">AI model recommendation based on landscape topology</span>
+                            <span class="label">02 / STRATEGY</span>
+                            <h3>Agent strategy</h3>
+                            <span class="card-subtitle">How the agent approaches your objective.</span>
                         </div>
                         <span id="agentBadge" class="badge">IDLE</span>
                     </div>
@@ -310,36 +301,36 @@
 
                     <div class="metrics">
                         <div class="metric">
-                            <span>Strategic Confidence</span>
+                            <span>Confidence</span>
                             <strong id="confidence">—</strong>
                         </div>
                         <div class="metric">
-                            <span>Exploration Balance</span>
+                            <span>Exploration balance</span>
                             <strong id="exploration">—</strong>
                         </div>
                     </div>
 
                     <div class="reason-box">
-                        <span>AI REASONING LOG</span>
-                        <p id="reason">The agent will observe the search space, evaluate mathematical characteristics, and dispatch an optimal algorithm.</p>
+                        <span>REASONING</span>
+                        <p id="reason">Ready when you are. Run a search to see the selected algorithm and the reasoning behind it.</p>
                     </div>
                 </section>
 
 
-                <!-- Best Solution Results Card -->
+                <!-- Best solution Results Card -->
                 <section class="card">
                     <div class="card-header">
                         <div class="card-title-group">
-                            <span class="label">OPTIMAL CONVERGENCE</span>
-                            <h3>Best Solution</h3>
-                            <span class="card-subtitle">Verified global minimum coordinates and score</span>
+                            <span class="label">03 / RESULTS</span>
+                            <h3>Best solution</h3>
+                            <span class="card-subtitle">Best-found score and coordinates from your search.</span>
                         </div>
                     </div>
 
                     <div class="result-grid">
                         <div class="result-item">
                             <div class="result-item-header">
-                                <span class="result-item-label">Best Score f(x*)</span>
+                                <span class="result-item-label">Objective score · f(x*)</span>
                                 <button id="copyScoreBtn" type="button" class="copy-mini-btn" onclick="copyScore()" title="Copy score" disabled>Copy</button>
                             </div>
                             <strong id="bestScore" class="highlight-score">—</strong>
@@ -347,32 +338,63 @@
 
                         <div class="result-item">
                             <div class="result-item-header">
-                                <span class="result-item-label">Best Coordinates x*</span>
+                                <span class="result-item-label">Coordinates · x*</span>
                                 <button id="copyPosBtn" type="button" class="copy-mini-btn" onclick="copyPosition()" title="Copy coordinates" disabled>Copy</button>
                             </div>
                             <strong id="bestPosition">—</strong>
                         </div>
 
                         <div class="result-item">
-                            <span>Stages Executed</span>
+                            <span>Stages executed</span>
                             <strong id="stageCount">—</strong>
                         </div>
 
                         <div class="result-item">
-                            <span>Strategies Used</span>
+                            <span>Strategies used</span>
                             <strong id="strategyCount">—</strong>
                         </div>
                     </div>
                 </section>
 
 
-                <!-- Live Agent Activity Feed -->
+
+
+
+
+
+            <!-- Convergence Performance Chart -->
+            <section class="card convergence-card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <span class="label">SEARCH PERFORMANCE</span>
+                        <h3>Convergence</h3>
+                        <span class="card-subtitle">Objective function value vs. iteration count</span>
+                    </div>
+                    <span id="convergenceStatus" class="small-status">No data yet</span>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="convergenceChart" role="img" aria-label="Convergence chart: objective score by iteration"></canvas>
+                    <div id="chartEmpty" class="chart-empty">
+                        <div>
+                            <strong>No convergence telemetry yet.</strong>
+                            Run optimization to visualize the iteration trajectory.
+                        </div>
+                    </div>
+                </div>
+            </section>
+            </div>
+
+        </div>
+
+        <div class="telemetry-section" id="execution">
+                <!-- Live Agent activity Feed -->
                 <section id="activitySection" class="card">
                     <div class="card-header">
                         <div class="card-title-group">
                             <span class="label">EXECUTION LOG</span>
-                            <h3>Agent Activity</h3>
-                            <span class="card-subtitle">Live events dispatched during the optimization loop</span>
+                            <h3>Agent activity</h3>
+                            <span class="card-subtitle">Follow the decisions made during each run.</span>
                         </div>
                         <span id="activityStatus" class="small-status">Waiting</span>
                     </div>
@@ -383,15 +405,13 @@
                         </div>
                     </div>
                 </section>
-
-
                 <!-- Multi-Stage Strategy History -->
                 <section class="card">
                     <div class="card-header">
                         <div class="card-title-group">
                             <span class="label">ADAPTATION HISTORY</span>
-                            <h3>Stage History</h3>
-                            <span class="card-subtitle">Multi-stage progression and algorithm transitions</span>
+                            <h3>Stage history</h3>
+                            <span class="card-subtitle">Review algorithm changes and stage scores.</span>
                         </div>
                     </div>
 
@@ -401,45 +421,21 @@
                         </div>
                     </div>
                 </section>
-
-            </div>
-
         </div>
 
+        <!-- Bottom Analytical Section: Convergence & AI Tutor -->
+        <div class="analytics-section" id="insights">
 
-        <!-- Bottom Analytical Section: Convergence Curve & AI Tutor -->
-        <div class="analytics-section">
 
-            <!-- Convergence Performance Chart -->
-            <section class="card convergence-card">
-                <div class="card-header">
-                    <div class="card-title-group">
-                        <span class="label">PERFORMANCE TELEMETRY</span>
-                        <h3>Convergence Curve</h3>
-                        <span class="card-subtitle">Objective function value vs. iteration count</span>
-                    </div>
-                    <span id="convergenceStatus" class="small-status">No data yet</span>
-                </div>
-
-                <div class="chart-container">
-                    <canvas id="convergenceChart"></canvas>
-                    <div id="chartEmpty" class="chart-empty">
-                        <div>
-                            <strong>No convergence telemetry yet.</strong>
-                            Run optimization to visualize the iteration trajectory.
-                        </div>
-                    </div>
-                </div>
-            </section>
 
 
             <!-- Interactive AI Behavior Tutor -->
             <section class="card ask-ai-card">
                 <div class="card-header">
                     <div class="card-title-group">
-                        <span class="label">AI BEHAVIOR TUTOR</span>
-                        <h3>Algorithm & Function Insights</h3>
-                        <span class="card-subtitle">Ask questions about how algorithms navigate landscapes</span>
+                        <span class="label">UNDERSTAND YOUR SEARCH</span>
+                        <h3>Understand your results</h3>
+                        <span class="card-subtitle">Explore the reasoning behind the algorithms.</span>
                     </div>
                     <span class="badge">INTERACTIVE</span>
                 </div>
@@ -464,9 +460,9 @@
                 </div>
 
                 <div class="ask-input-row">
-                    <input id="askQuestionInput" type="text" placeholder="e.g. Why did it adapt? How does CMA-ES work?" autocomplete="off">
+                    <input id="askQuestionInput" aria-label="Ask about the algorithm or objective" type="text" placeholder="e.g. Why did it adapt? How does CMA-ES work?" autocomplete="off">
                     <button id="askButton" type="button" class="primary-button-small">
-                        <span id="askButtonText">Ask Info</span>
+                        <span id="askButtonText">Ask a question</span>
                         <span id="askButtonLoader" class="loader hidden"></span>
                     </button>
                 </div>
@@ -510,7 +506,7 @@
                     </div>
                     <div class="arch-node">
                         <strong>3. Decide</strong>
-                        <p>Autonomous selection from 8 optimizer classes (CMA-ES, PSO, Nelder-Mead, GA, SA, etc.).</p>
+                        <p>Autonomous selection from the available optimizer classes (CMA-ES, PSO, Nelder-Mead, GA, SA, etc.).</p>
                     </div>
                     <div class="arch-node">
                         <strong>4. Act</strong>
@@ -526,7 +522,7 @@
                     </div>
                 </div>
 
-                <div style="font-size:11px; font-family:var(--font-mono); color:var(--text-dim); border-top:1px solid var(--border-subtle); padding-top:12px;">
+                <div style="font-size:11px; font-family:var(--font-mono); color:var(--text-secondary); border-top:1px solid var(--border-color); padding-top:12px;">
                     Powered by Google Gemini Automatic Function Calling (AFC) with intelligent local mathematical fallback.
                 </div>
             </div>
@@ -548,7 +544,7 @@
 
 
     <!-- JavaScript Execution Engine -->
-    <script src="app.js"></script>
+    <script src="app.js?v=20261101"></script>
 
 </body>
 
