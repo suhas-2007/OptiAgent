@@ -1,5 +1,33 @@
 # Search up to 100 dimensions
 
+## All-function extension — 5 November 2026
+
+All nine built-in preset families now generate formulas and bounds using the
+selected dimension, in both the browser and function-name identification API.
+Sphere, Rosenbrock (2–100D), Rastrigin, Ackley, Shifted Quadratic and the project's
+Trigonometric objective expand naturally. Beale, Booth and Himmelblau are
+intrinsically 2D: at other sizes the UI explicitly labels a block extension,
+summing independent 2D copies and adding a squared coordinate for odd sizes.
+These extensions are not canonical high-dimensional versions of those benchmarks.
+
+The backend also accepts `benchmark` instead of a manually typed `objective`,
+for example `{"benchmark":"rosenbrock","dimensions":100,"bounds":[...]}`.
+An explicit objective takes precedence. Bounds must still match the dimension.
+Custom mathematical objectives continue to support 1–100 declared coordinates;
+their expressions are never silently rewritten.
+
+Coupled objectives now receive bounded L-BFGS-B refinement before population
+search. Smooth whitelisted expressions use reverse-mode AST derivatives without
+eval or generated code. Unsupported/singular derivatives retain numerical
+differentiation or population search. No known benchmark solutions are injected.
+
+Offline 100D checks produced zero or near-zero best scores for all nine families
+with seed 7 (including the labeled block extensions). In particular, Rosenbrock
+improved to approximately 4.21e-14. These are observed runs, not a guarantee for
+every objective, start, rotation, seed, or machine. Execution limits remain
+cooperative; scheduling delays or a native operation can exceed the time target.
+The browser/backend formula builders are cross-tested at 2, 5 and 100 dimensions.
+
 The `/optimize` endpoint and browser dimension control accept 1–100 variables.
 Existing request fields and response fields remain available. No universal
 global-minimum guarantee is made for arbitrary bounded functions.

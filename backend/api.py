@@ -21,6 +21,7 @@ from flask import (
 )
 from flask_cors import CORS
 from function_parser import SafeFunction
+from benchmarks import build_benchmark
 from agent import OptimizationAgent
 from google import genai
 from google.genai import types
@@ -99,6 +100,9 @@ def optimize():
         expression = data.get(
             "objective"
         )
+
+        if not expression and data.get('benchmark'):
+            expression = build_benchmark(data['benchmark'], data.get('dimensions', 2))['objective']
 
         if not expression or not isinstance(expression, str) or not expression.strip():
 
@@ -689,15 +693,10 @@ def extract_problem():
             lower_text = text.lower()
             for key, preset in PRESET_BENCHMARKS.items():
                 if key in lower_text:
-                    return jsonify({
-                        "success": True,
-                        "source": "preset",
-                        "name": preset["name"],
-                        "objective": preset["objective"],
-                        "dimensions": preset["dimensions"],
-                        "bounds": preset["bounds"],
-                        "explanation": preset["explanation"]
-                    })
+                    canonical = 'rosenbrock' if key == 'nelder mead' else key
+                    generated = build_benchmark(canonical, data.get('dimensions', 2))
+                    return jsonify(dict(generated, success=True, source='preset', benchmark_key=canonical))
+
 
         # 2. Try Gemini multimodal if image or freeform text is provided
         client = _get_gemini_client()
@@ -792,6 +791,8 @@ Respond ONLY with a valid JSON object (no markdown code blocks, just raw JSON) w
             "error": "Could not identify optimization problem. Please provide a clear function name, formula, or screenshot."
         }), 400
 
+    except ValueError as e:
+        return jsonify({'success':False, 'error':str(e)}), 400
     except Exception as e:
         print(f"[API] Error in /api/extract-problem: {e}")
         return jsonify({

@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import numpy as np
+from scipy.optimize import minimize
 
 _backend_dir = os.path.dirname(os.path.abspath(__file__))
 if _backend_dir not in sys.path:
@@ -13,6 +14,7 @@ from optimizer_registry import OptimizerRegistry
 from ai_planner import AIPlanner
 from solution_validator import SolutionValidator
 from search import SearchContext, SearchLimit, additive_components, separable_search
+from differentiation import ExpressionGradient, UnsupportedGradient
 
 
 class OptimizationAgent:
@@ -44,6 +46,10 @@ class OptimizationAgent:
         self.current_strategy, self.last_recommendation = None, None
         self.strategy_history, self.stage_history, self.convergence_history = [], [], []
         self.restart, self.context = False, None
+        try:
+            self.gradient = ExpressionGradient(objective_function, self.dimensions)
+        except (UnsupportedGradient, AttributeError):
+            self.gradient = None
 
     def _ask_gemini(self, status, validation=None, avoid_strategy=None):
         if self.context is not None:
@@ -64,13 +70,41 @@ class OptimizationAgent:
         return rec
 
     def _run_optimizer(self):
+        # Refine a feasible start before population search. This also helps smooth
+        # coupled objectives; it does not assume a benchmark's known solution.
+        start = (self.context.best_position.copy() if self.context.best_position is not None
+                 else (self.bounds[:, 0]+self.bounds[:, 1])/2)
+        if self.restart:
+            start = self.rng.uniform(self.bounds[:, 0], self.bounds[:, 1])
+        allowance = max(1, min(50000, (self.max_evaluations-self.context.evaluations)//3))
+        calls = 0
+        class RefinementLimit(Exception):
+            pass
+        def refine_objective(point):
+            nonlocal calls
+            if calls >= allowance:
+                raise RefinementLimit()
+            calls += 1
+            return self.context(point)
+        try:
+            # Use exact expression derivatives when available; retain finite
+            # differences for unsupported operations or singular start points.
+            jac = None
+            if self.gradient is not None:
+                try:
+                    self.gradient(start)
+                    jac = self.gradient
+                except UnsupportedGradient:
+                    pass
+            refined = minimize(refine_objective, start, jac=jac, method='L-BFGS-B', bounds=self.bounds,
+                               options={'maxiter':2000, 'ftol':1e-13, 'gtol':1e-7, 'maxls':30})
+            start = refined.x
+        except (RefinementLimit, UnsupportedGradient):
+            start = self.context.best_position.copy() if self.context.best_position is not None else start
         seed = int(self.rng.integers(0, 2**31-1))
         optimizer = self.registry.create(self.current_strategy, self.context,
                                          self.dimensions, self.bounds, seed=seed)
-        if self.best_position is not None and not self.restart:
-            optimizer.initial_position = self.best_position.copy()
-        elif self.restart:
-            optimizer.initial_position = self.rng.uniform(self.bounds[:, 0], self.bounds[:, 1])
+        optimizer.initial_position = start.copy()
         result = optimizer.optimize()
         if not isinstance(result, dict):
             raise RuntimeError('Optimizer returned an invalid result.')

@@ -205,10 +205,14 @@ async function checkAPI() {
     }
 }
 
-let activeRastriginExpression = null;
-function rastriginExpression(dimensions) {
-    const variables = Array.from({length: dimensions}, (_, i) => `x${i+1}`);
-    return `${10*dimensions} + ` + variables.map(x => `${x}**2 - 10*cos(2*pi*${x})`).join(' + ');
+let activeBenchmark = null;
+function selectedBenchmark(n) {
+    if (!activeBenchmark || objectiveInput.value !== activeBenchmark.expression) return null;
+    const next = buildBenchmark(activeBenchmark.key, n);
+    objectiveInput.value = next.objective;
+    activeBenchmark.expression = next.objective;
+    showExtractionStatus(`${next.name}: ${next.explanation}`, 'info');
+    return next;
 }
 
 // Generate Variable Bounds dynamically
@@ -222,11 +226,9 @@ function generateBounds() {
     }
 
     const oldBounds = [...boundsContainer.querySelectorAll('.bound-row')].map(row => [row.querySelector('.lower-bound').value, row.querySelector('.upper-bound').value]);
-    const scalable = activeRastriginExpression !== null && objectiveInput.value === activeRastriginExpression;
-    if (scalable) {
-        activeRastriginExpression = rastriginExpression(dimensions);
-        objectiveInput.value = activeRastriginExpression;
-    }
+    let scalable;
+    try { scalable = selectedBenchmark(dimensions); }
+    catch (error) { showError(error.message); return; }
     boundsContainer.innerHTML = "";
 
     for (let i = 1; i <= dimensions; i++) {
@@ -261,8 +263,8 @@ function generateBounds() {
             row.querySelector('.lower-bound').value = oldBounds[i-1][0];
             row.querySelector('.upper-bound').value = oldBounds[i-1][1];
         } else if (scalable) {
-            row.querySelector('.lower-bound').value = '-5.12';
-            row.querySelector('.upper-bound').value = '5.12';
+            row.querySelector('.lower-bound').value = scalable.bounds[i-1][0];
+            row.querySelector('.upper-bound').value = scalable.bounds[i-1][1];
         }
         boundsContainer.appendChild(row);
     }
@@ -274,14 +276,12 @@ function setExample(expression) {
 
     const key = String(expression).toLowerCase().trim();
     if (PRESET_BENCHMARKS[key]) {
-        let preset = PRESET_BENCHMARKS[key];
-        activeRastriginExpression = null;
-        if (key === 'rastrigin') {
-            const n = Math.min(100, Math.max(1, parseInt(dimensionsInput.value, 10) || 2));
-            preset = {...preset, objective: rastriginExpression(n), dimensions: n,
-                      bounds: Array.from({length: n}, () => [-5.12, 5.12])};
-            activeRastriginExpression = preset.objective;
-        }
+        let preset;
+        try {
+            const n = Number(dimensionsInput.value);
+            preset = buildBenchmark(key, n);
+        } catch (error) { showError(error.message); return; }
+        activeBenchmark = {key, expression:preset.objective};
         objectiveInput.value = preset.objective;
 
         if (dimensionsInput) {
@@ -1082,7 +1082,8 @@ async function identifyProblem(text, imageBase64) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 text: text || "",
-                image: imageBase64 || null
+                image: imageBase64 || null,
+                dimensions: Number(dimensionsInput.value)
             })
         });
 
@@ -1091,6 +1092,7 @@ async function identifyProblem(text, imageBase64) {
             throw new Error(data.error || "Could not identify function.");
         }
 
+        activeBenchmark = data.benchmark_key ? {key:data.benchmark_key, expression:data.objective} : null;
         if (objectiveInput) {
             objectiveInput.value = data.objective;
         }
