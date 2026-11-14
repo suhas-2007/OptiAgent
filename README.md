@@ -157,14 +157,35 @@ The study compares both restart modes with standalone Differential Evolution
 and OptiAgent's CMA-ES. Use the local planner and a recorded seed when comparing
 runs. Keep bounds, software versions, and evaluation budgets fixed.
 
-One useful test is shifted, pairwise-rotated Rastrigin at 100D. With 10 stages
-and a 100,000-evaluation cap, three local runs reached within `2.2e-14` of
-zero. That objective splits into independent pairs. The result does not
-establish accuracy on objectives whose variables all interact. When reporting
-results, include the seed count, stopping reason, and gap from the known
-minimum.
-
 [Study protocol](OPTIMIZER_STUDY.md) · [Search settings and limitations](SCALABLE_SEARCH.md)
+
+## Results
+
+The original comparison ran 180 trials across five functions, three dimensions
+(2D, 20D, and 100D), and three seeds per method. A run passed if its score
+was within `1e-6` of the known minimum. Each run had a cap of 4,000 search
+calls and five stages for the adaptive methods.
+
+| Method | Runs that reached the target |
+| --- | ---: |
+| OptiAgent with Uniform restart | 39/45 |
+| OptiAgent with Diverse restart | 39/45 |
+| Standalone Differential Evolution | 15/45 |
+| Standalone OptiAgent CMA-ES | 20/45 |
+
+The two restart modes tied on target hits. The adaptive workflows also use
+local refinement and can search independent terms separately, so this table
+compares whole workflows. These counts predate the independent-pair search
+and describe that earlier version of OptiAgent.
+
+### Follow-up at 100 dimensions
+
+On shifted, pairwise-rotated Rastrigin, both original restart modes had a
+median error of about `49.75` from the known minimum of `0`. After adding
+independent-pair search, three local runs with seeds 7, 41, and 87 finished
+10 stages within a 100,000-call cap. Their errors ranged from `1.78e-15` to
+`2.13e-14`. This follow-up used a larger budget and tested an objective
+that splits into independent pairs.
 
 ## License
 
