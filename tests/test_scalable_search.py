@@ -57,7 +57,7 @@ def test_budget_interruption_returns_verified_incumbent():
 
 def test_restart_is_real_and_negative_scores_do_not_stop_early(monkeypatch):
     f=SafeFunction('(x1+x2)**2-100')
-    agent=OptimizationAgent(f,2,[[-1,1]]*2,f.expression,max_stages=3,random_seed=3)
+    agent=OptimizationAgent(f,2,[[-1,1]]*2,f.expression,max_stages=3,patience=1,random_seed=3)
     def plan(**kwargs):
         return {'recommended_strategy':'Differential Evolution','source':'test','confidence':0.5}
     monkeypatch.setattr(agent.planner,'recommend_strategy',plan)
@@ -74,7 +74,7 @@ def test_restart_is_real_and_negative_scores_do_not_stop_early(monkeypatch):
     result=agent.optimize()
     assert len(result['stage_history'])==3
     assert len(set(seeds))==3
-    assert result['stage_history'][1]['restarted']
+    assert not result['stage_history'][1]['restarted']
     assert result['stage_history'][2]['restarted']
 
 
@@ -125,3 +125,24 @@ def test_time_budget_keeps_best_candidate():
     result=OptimizationAgent(slow,2,[[-2,2]]*2,'test callable',time_limit_seconds=0.02,random_seed=1).optimize()
     assert result['termination_reason']=='time_limit'
     assert math.isfinite(result['best_score'])
+
+
+@pytest.mark.parametrize('expression', ['(x1-0.3)**2+x2**2', '(x1+x2-0.3)**2+x2**2'])
+def test_api_runs_configured_stages_on_both_search_paths(expression):
+    request = {'objective': expression, 'dimensions': 2, 'bounds': [[-5, 5]]*2,
+               'max_stages': 4, 'patience': 2, 'max_evaluations': 1200,
+               'random_seed': 17, 'planner_mode': 'local'}
+    with app.test_client() as client:
+        response = client.post('/optimize', json=request)
+        repeat = client.post('/optimize', json=request).get_json()
+    assert response.status_code == 200
+    result = response.get_json()
+    assert len(result['stage_history']) == 4
+    assert result['evaluations'] <= 1200
+    assert sum(stage['stage_evaluations'] for stage in result['stage_history']) == result['evaluations']
+    assert all(stage['stage_evaluations'] > 0 for stage in result['stage_history'])
+    assert all(stage['reliable'] for stage in result['stage_history'])
+    assert [stage['restarted'] for stage in result['stage_history']] == [False, False, False, True]
+    assert result['convergence_history'] == repeat['convergence_history']
+    assert result['best_position'] == repeat['best_position']
+    assert result['settings']['random_seed'] == 17

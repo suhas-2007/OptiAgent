@@ -19,7 +19,9 @@ class HillClimbing:
         step_size=0.1,
         restarts=5,
         initial_position=None,
+        seed=None,
     ):
+        self.rng = np.random.default_rng(seed)
         self.objective_function = objective_function
         self.dimensions = dimensions
         self.bounds = np.asarray(bounds, dtype=float)
@@ -50,15 +52,15 @@ class HillClimbing:
                         upper,
                     )
                 except Exception:
-                    current_position = np.random.uniform(lower, upper, self.dimensions)
+                    current_position = self.rng.uniform(lower, upper, self.dimensions)
             else:
-                current_position = np.random.uniform(lower, upper, self.dimensions)
+                current_position = self.rng.uniform(lower, upper, self.dimensions)
 
             current_score = float(self.objective_function(current_position))
 
             for _ in range(self.iterations):
                 # Generate a nearby candidate
-                candidate = current_position + np.random.normal(
+                candidate = current_position + self.rng.normal(
                     0,
                     self.step_size * (upper - lower),
                     self.dimensions,

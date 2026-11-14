@@ -20,7 +20,9 @@ class SimulatedAnnealing:
         cooling_rate=0.995,
         step_size=0.1,
         initial_position=None,
+        seed=None,
     ):
+        self.rng = np.random.default_rng(seed)
         self.objective_function = objective_function
         self.dimensions = dimensions
         self.bounds = np.asarray(bounds, dtype=float)
@@ -47,9 +49,9 @@ class SimulatedAnnealing:
                     upper,
                 )
             except Exception:
-                current_position = np.random.uniform(lower, upper, self.dimensions)
+                current_position = self.rng.uniform(lower, upper, self.dimensions)
         else:
-            current_position = np.random.uniform(lower, upper, self.dimensions)
+            current_position = self.rng.uniform(lower, upper, self.dimensions)
 
         current_score = float(self.objective_function(current_position))
         best_position = current_position.copy()
@@ -60,7 +62,7 @@ class SimulatedAnnealing:
 
         for _ in range(self.iterations):
             # Generate neighboring solution
-            candidate = current_position + np.random.normal(
+            candidate = current_position + self.rng.normal(
                 0,
                 self.step_size * (upper - lower),
                 self.dimensions,
@@ -76,7 +78,7 @@ class SimulatedAnnealing:
             else:
                 # Metropolis criterion to escape local minima
                 probability = np.exp(-delta / max(temperature, 1e-12))
-                accept = np.random.random() < probability
+                accept = self.rng.random() < probability
 
             if accept:
                 current_position = candidate

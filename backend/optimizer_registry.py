@@ -69,6 +69,8 @@ class OptimizerRegistry:
                                           max_iterations=300, seed=seed)
         if name == "CMA-ES":
             return CMAES(objective_function, dimensions, bounds, generations=200, seed=seed)
+        if name in ("Genetic Algorithm", "Simulated Annealing", "Hill Climbing"):
+            return self.algorithms[name](objective_function, dimensions, bounds, seed=seed)
         return self.algorithms[name](
             objective_function,
             dimensions,
@@ -111,6 +113,7 @@ class OptimizerRegistry:
         objective_function,
         dimensions,
         bounds,
+        seed=None,
     ):
 
         return GeneticAlgorithm(
@@ -119,6 +122,7 @@ class OptimizerRegistry:
             bounds=bounds,
             population_size=50,
             generations=100,
+            seed=seed,
         )
 
     def _create_sa(
@@ -126,6 +130,7 @@ class OptimizerRegistry:
         objective_function,
         dimensions,
         bounds,
+        seed=None,
     ):
 
         return SimulatedAnnealing(
@@ -133,6 +138,7 @@ class OptimizerRegistry:
             dimensions=dimensions,
             bounds=bounds,
             iterations=1000,
+            seed=seed,
         )
 
     def _create_hill_climbing(
@@ -140,6 +146,7 @@ class OptimizerRegistry:
         objective_function,
         dimensions,
         bounds,
+        seed=None,
     ):
 
         return HillClimbing(
@@ -148,6 +155,7 @@ class OptimizerRegistry:
             bounds=bounds,
             iterations=500,
             restarts=10,
+            seed=seed,
         )
 
     def _create_cma_es(

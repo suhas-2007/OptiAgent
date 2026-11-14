@@ -21,7 +21,9 @@ class GeneticAlgorithm:
         crossover_rate=0.8,
         mutation_scale=0.1,
         initial_position=None,
+        seed=None,
     ):
+        self.rng = np.random.default_rng(seed)
         self.objective_function = objective_function
         self.dimensions = dimensions
         self.bounds = np.asarray(bounds, dtype=float)
@@ -48,7 +50,7 @@ class GeneticAlgorithm:
     def _initialize_population(self):
         lower = self.bounds[:, 0]
         upper = self.bounds[:, 1]
-        return np.random.uniform(
+        return self.rng.uniform(
             lower,
             upper,
             size=(self.population_size, self.dimensions),
@@ -56,15 +58,15 @@ class GeneticAlgorithm:
 
     def _select_parent(self):
         """Tournament selection."""
-        i, j = np.random.randint(0, self.population_size, size=2)
+        i, j = self.rng.integers(0, self.population_size, size=2)
         if self.personal_best_scores[i] < self.personal_best_scores[j]:
             return self.population[i].copy()
         return self.population[j].copy()
 
     def _crossover(self, parent1, parent2):
-        if np.random.random() > self.crossover_rate:
+        if self.rng.random() > self.crossover_rate:
             return parent1.copy()
-        mask = np.random.random(self.dimensions) < 0.5
+        mask = self.rng.random(self.dimensions) < 0.5
         child = np.where(mask, parent1, parent2)
         return child
 
@@ -74,8 +76,8 @@ class GeneticAlgorithm:
         search_range = upper - lower
 
         for i in range(self.dimensions):
-            if np.random.random() < self.mutation_rate:
-                individual[i] += np.random.normal(
+            if self.rng.random() < self.mutation_rate:
+                individual[i] += self.rng.normal(
                     0,
                     self.mutation_scale * search_range[i],
                 )
@@ -99,19 +101,16 @@ class GeneticAlgorithm:
     def optimize(self):
         # Apply global-best seed if provided
         if self.initial_position is not None:
-            try:
-                seed = np.clip(
-                    np.asarray(self.initial_position, dtype=float),
-                    self.bounds[:, 0],
-                    self.bounds[:, 1],
-                )
-                self.population[0] = seed
-                self.personal_best_positions[0] = seed.copy()
-                self.personal_best_scores[0] = float(self.objective_function(seed))
-                self._update_best()
-                self.history = [self.global_best_score]
-            except Exception:
-                pass
+            seed = np.clip(
+                np.asarray(self.initial_position, dtype=float),
+                self.bounds[:, 0],
+                self.bounds[:, 1],
+            )
+            self.population[0] = seed
+            self.personal_best_positions[0] = seed.copy()
+            self.personal_best_scores[0] = float(self.objective_function(seed))
+            self._update_best()
+            self.history = [self.global_best_score]
 
         for generation in range(self.generations):
             new_population = []

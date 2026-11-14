@@ -1,5 +1,27 @@
 # Search up to 100 dimensions
 
+## Run protocol
+
+Both independent-coordinate and coupled objectives use the stage loop.
+`max_stages` and restart `patience` accept integers from 1 to 50. Each stage
+gets an equal share of the remaining evaluation budget across the remaining
+stages. Unused evaluations carry forward. Time and evaluation limits can end
+a run before the stage limit. The time limit is checked cooperatively.
+
+Patience counts consecutive stages without a decrease greater than
+`1e-9 * max(1, abs(best_score))`. At that threshold the next stage uses a fresh
+starting point. For coupled objectives, it also requests another strategy.
+
+Use `planner_mode: "local"` and a recorded `random_seed` for experiments.
+Compare runs with the same objective, bounds, settings and software versions.
+Use an evaluation limit that ends before the wall-clock limit when comparing
+search traces. Report full-objective and component evaluations separately
+because those two types have different costs.
+
+The dashboard shows request status while the server works and displays stage
+records after completion. Download run data to retain settings, strategy sources,
+evaluation counts, incumbent history and stop reason.
+
 ## All-function extension — 5 November 2026
 
 All nine built-in preset families now generate formulas and bounds using the
@@ -66,9 +88,8 @@ Checked before evaluations and planner attempts. A single in-progress objective
 evaluation or native solver operation cannot be interrupted by this cooperative
 limit. This is not a process-level hard timeout.
 
-`random_seed`: optional integer 0–2147483647. Seeds structural initialization,
-stage restarts, DE, PSO, and CMA-ES. The other legacy stochastic solvers retain
-their existing random behavior; Gemini decisions are not deterministic.
+`random_seed`: optional integer 0–2147483647. The server returns the effective
+seed. Gemini decisions and time-limited runs can vary between repeats.
 
 New response fields: `termination_reason`, `global_optimum_certified` (currently
 always false), `evaluations`, `objective_evaluations`, `component_evaluations`,
@@ -76,7 +97,8 @@ always false), `evaluations`, `objective_evaluations`, `component_evaluations`,
 
 For separable search, `recommendation.source` is `structural_analysis`, not
 `gemini` or `local_fallback`. Confidence is null because no model confidence
-was generated. Convergence records are search progress, not evaluation counts.
+was generated. Convergence records pair the best observed score with cumulative
+search evaluation counts. Each stage ends with an independent score check.
 
 ## Verification on 4 November 2026
 

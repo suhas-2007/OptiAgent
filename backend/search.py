@@ -14,6 +14,10 @@ class SearchLimit(RuntimeError):
     pass
 
 
+class StageBudgetReached(RuntimeError):
+    pass
+
+
 class SearchContext:
     def __init__(self, objective, bounds, max_evaluations, time_limit):
         self.objective = objective
@@ -26,6 +30,13 @@ class SearchContext:
         self.best_score = math.inf
         self.best_position = None
         self.improvements = []
+        self.improvement_evaluations = []
+        self.stage_end = max_evaluations
+        self.stage_best_score = math.inf
+
+    def begin_stage(self, stages_left):
+        self.stage_end = self.evaluations + (self.max_evaluations - self.evaluations) // stages_left
+        self.stage_best_score = math.inf
 
     @property
     def evaluations(self):
@@ -36,6 +47,8 @@ class SearchContext:
             raise SearchLimit('time_limit')
         if self.evaluations >= self.max_evaluations:
             raise SearchLimit('evaluation_limit')
+        if self.evaluations >= self.stage_end:
+            raise StageBudgetReached()
 
     def __call__(self, position):
         self.check()
@@ -45,10 +58,13 @@ class SearchContext:
                 or np.any(position < self.bounds[:, 0]) or np.any(position > self.bounds[:, 1])):
             return math.inf
         score = float(self.objective(position))
+        if math.isfinite(score):
+            self.stage_best_score = min(self.stage_best_score, score)
         if math.isfinite(score) and score < self.best_score:
             self.best_position = position.copy()
             self.best_score = score
             self.improvements.append(score)
+            self.improvement_evaluations.append(self.evaluations)
         return score if math.isfinite(score) else math.inf
 
     def component(self, function, value):
@@ -121,19 +137,27 @@ def additive_components(objective, dimensions):
     return [make_component(i, group) if group else None for i, group in enumerate(groups)]
 
 
-def separable_search(context, components, initial_position):
+def separable_search(context, components, initial_position, rng=None, offset=0):
     """Explore every 1D interval, refine its sampled basins, then verify full f(x)."""
     position = np.asarray(initial_position, dtype=float).copy()
     history = [context(position)]
-    for index, component in enumerate(components):
-        if component is None:
-            continue
+    indices = [index for index, component in enumerate(components) if component is not None]
+    if indices:
+        offset %= len(indices)
+        indices = indices[offset:] + indices[:offset]
+    for count, index in enumerate(indices):
+        component = components[index]
         lower, upper = context.bounds[index]
-        remaining_dimensions = max(1, sum(c is not None for c in components[index:]))
-        allowance = max(0, (context.max_evaluations - context.evaluations) // remaining_dimensions - 1)
-        if allowance < 8:
-            raise SearchLimit('evaluation_limit')
-        grid_size = min(257, max(9, allowance // 3))
+        remaining = context.stage_end - context.evaluations
+        if remaining < 5:
+            if remaining:
+                position[index] = lower if position[index] > lower else upper
+                history.append(context(position))
+            break
+        allowance = max(4, remaining // (len(indices) - count) - 1)
+        grid_size = min(257, max(3, allowance // 3))
+        if grid_size % 2 == 0:
+            grid_size -= 1
         used = 0
         def evaluate(value):
             nonlocal used
@@ -142,6 +166,9 @@ def separable_search(context, components, initial_position):
             used += 1
             return context.component(component, float(value))
         grid = np.linspace(lower, upper, grid_size)
+        if rng is not None and grid_size > 3:
+            spacing = (upper - lower) / (grid_size - 1)
+            grid[1:-1] += rng.uniform(-0.4, 0.4, grid_size - 2) * spacing
         scores = np.array([evaluate(v) for v in grid])
         best_index = int(np.argmin(scores))
         best_x, best_score = float(grid[best_index]), float(scores[best_index])

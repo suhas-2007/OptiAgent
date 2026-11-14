@@ -297,9 +297,10 @@ def optimize():
         # max_stages and patience validation
 
         try:
-            max_stages = int(
-                data.get("max_stages", 5)
-            )
+            raw = data.get("max_stages", 5)
+            if isinstance(raw, bool) or not str(raw).isdigit():
+                raise ValueError()
+            max_stages = int(raw)
             if max_stages < 1 or max_stages > 50:
                 return jsonify(
                     {
@@ -316,9 +317,10 @@ def optimize():
             ), 400
 
         try:
-            patience = int(
-                data.get("patience", 3)
-            )
+            raw = data.get("patience", 3)
+            if isinstance(raw, bool) or not str(raw).isdigit():
+                raise ValueError()
+            patience = int(raw)
             if patience < 1 or patience > 50:
                 return jsonify(
                     {
@@ -412,18 +414,12 @@ def optimize():
             max_evaluations=max_evaluations,
             time_limit_seconds=time_limit,
             random_seed=random_seed,
+            planner_mode=data.get("planner_mode", "auto"),
         )
 
         # run optimization
 
         result = agent.optimize()
-        print()
-        print(">>> RESULT KEYS:")
-        print(result.keys())
-
-        print()
-        print(">>> GEMINI RECOMMENDATION:")
-        print(result.get("recommendation"))
         # convert numpy values
 
         best_position = result.get(
@@ -502,6 +498,7 @@ def optimize():
                     ]
                 ),
 
+                "settings": result["settings"],
                 "termination_reason": result.get("termination_reason", "stage_limit"),
                 "global_optimum_certified": result.get("global_optimum_certified", False),
                 "evaluations": result.get("evaluations", 0),

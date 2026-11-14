@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="OptiAgent — Autonomous Agentic Numerical Optimization Studio with Dynamic Multi-Stage AI Reasoning and Validation">
     <title>OptiAgent — Autonomous Optimization Studio</title>
-    <link rel="stylesheet" href="style.css?v=20261104">
+    <link rel="stylesheet" href="style.css?v=20261114">
 </head>
 
 <body>
@@ -18,7 +18,6 @@
             <span class="brand-badge">OA</span>
             <span class="brand-text">
                 <span class="brand-title">OptiAgent</span>
-                <span class="version-pill">v1.0</span>
                 <span class="brand-subtitle">Numerical optimization</span>
             </span>
         </a>
@@ -46,27 +45,21 @@
 
         <section class="hero" aria-labelledby="pageTitle">
             <div class="hero-main">
-                <div class="eyebrow">OPTIAGENT WORKSPACE</div>
                 <h1 id="pageTitle">Numerical optimization</h1>
-                <p>Define your objective. Let the agent select, test, and adapt the search strategy.</p>
-            </div>
-            <div class="hero-badge-strip" aria-label="Engine details">
-                <span class="spec-badge"><span class="spec-dot"></span>Gemini + local fallback</span>
-                <span class="spec-badge">Independent solution validation</span>
+                <p>Minimize an expression over bounded variables and compare search stages.</p>
             </div>
         </section>
 
         <!-- Autonomous Decision Pipeline Stepper -->
         <section class="pipeline-card" aria-label="Agent Execution Pipeline">
             <div class="pipeline-header">
-                <h3>The agent cycle</h3>
-                <span class="pipeline-legend">Observe → optimize → adapt</span>
+                <h3>Run progress</h3>
+                <span class="pipeline-legend"></span>
             </div>
 
             <div class="pipeline">
-                <div id="pipelineObserve" class="pipeline-step active" data-step="observe">
+                <div id="pipelineObserve" class="pipeline-step" data-step="observe">
                     <div class="step-meta">
-                        <span class="step-number">01</span>
                         <span class="step-indicator"></span>
                     </div>
                     <strong>Observe</strong>
@@ -77,7 +70,6 @@
 
                 <div id="pipelineReason" class="pipeline-step" data-step="reason">
                     <div class="step-meta">
-                        <span class="step-number">02</span>
                         <span class="step-indicator"></span>
                     </div>
                     <strong>Reason</strong>
@@ -88,7 +80,6 @@
 
                 <div id="pipelineDecide" class="pipeline-step" data-step="decide">
                     <div class="step-meta">
-                        <span class="step-number">03</span>
                         <span class="step-indicator"></span>
                     </div>
                     <strong>Decide</strong>
@@ -99,7 +90,6 @@
 
                 <div id="pipelineAct" class="pipeline-step" data-step="act">
                     <div class="step-meta">
-                        <span class="step-number">04</span>
                         <span class="step-indicator"></span>
                     </div>
                     <strong>Act</strong>
@@ -110,7 +100,6 @@
 
                 <div id="pipelineValidate" class="pipeline-step" data-step="validate">
                     <div class="step-meta">
-                        <span class="step-number">05</span>
                         <span class="step-indicator"></span>
                     </div>
                     <strong>Validate</strong>
@@ -121,7 +110,6 @@
 
                 <div id="pipelineAdapt" class="pipeline-step" data-step="adapt">
                     <div class="step-meta">
-                        <span class="step-number">06</span>
                         <span class="step-indicator"></span>
                     </div>
                     <strong>Adapt</strong>
@@ -140,7 +128,6 @@
                 <section class="card">
                     <div class="card-header">
                         <div class="card-title-group">
-                            <span class="label">01 / CONFIGURE</span>
                             <h3>Set up your search</h3>
                             <span class="card-subtitle">Choose a function and define where to search.</span>
                         </div>
@@ -219,21 +206,43 @@
                         <div class="form-group" style="margin-bottom:0;">
                             <label for="maxStages">
                                 <span>Max Stages</span>
-                                <span class="label-hint">1–20</span>
+                                <span class="label-hint">1–50</span>
                             </label>
-                            <input id="maxStages" type="number" value="5" min="1" max="20">
+                            <input id="maxStages" type="number" value="5" min="1" max="50">
                         </div>
 
                         <div class="form-group" style="margin-bottom:0;">
                             <label for="patience">
-                                <span>Patience</span>
-                                <span class="label-hint">1–20</span>
+                                <span>Restart patience</span>
+                                <span class="label-hint">1–50</span>
                             </label>
-                            <input id="patience" type="number" value="3" min="1" max="20">
+                            <input id="patience" type="number" value="3" min="1" max="50">
                         </div>
                     </div>
 
 
+                    <p class="settings-hint">Restart after this many stages without improvement. The time and evaluation limits apply to the entire run.</p>
+                    <details class="run-settings">
+                        <summary>Search settings</summary>
+                        <div class="parameters-grid">
+                            <div class="form-group">
+                                <label for="evaluationBudget">Evaluation limit</label>
+                                <input id="evaluationBudget" type="number" min="100" max="500000" placeholder="Automatic">
+                            </div>
+                            <div class="form-group">
+                                <label for="timeLimit">Time limit (seconds)</label>
+                                <input id="timeLimit" type="number" min="0.01" max="90" step="any" value="45">
+                            </div>
+                            <div class="form-group">
+                                <label for="runSeed">Random seed</label>
+                                <input id="runSeed" type="number" min="0" max="2147483647" placeholder="Random">
+                            </div>
+                            <div class="form-group">
+                                <label for="plannerMode">Strategy planner</label>
+                                <select id="plannerMode"><option value="auto">Gemini with local fallback</option><option value="local">Local only</option></select>
+                            </div>
+                        </div>
+                    </details>
                     <!-- Variable Bounds Table -->
                     <div class="form-group" style="margin-top:14px; margin-bottom:0;">
                         <label>
@@ -287,21 +296,19 @@
                 <section class="card ai-card">
                     <div class="card-header">
                         <div class="card-title-group">
-                            <span class="label">02 / STRATEGY</span>
                             <h3>Agent strategy</h3>
-                            <span class="card-subtitle">How the agent approaches your objective.</span>
                         </div>
                         <span id="agentBadge" class="badge">IDLE</span>
                     </div>
 
                     <div class="strategy-box">
-                        <span>SELECTED STRATEGY</span>
+                        <span>Latest strategy</span>
                         <strong id="strategy">—</strong>
                     </div>
 
                     <div class="metrics">
                         <div class="metric">
-                            <span>Confidence</span>
+                            <span>Planner confidence</span>
                             <strong id="confidence">—</strong>
                         </div>
                         <div class="metric">
@@ -311,8 +318,8 @@
                     </div>
 
                     <div class="reason-box">
-                        <span>REASONING</span>
-                        <p id="reason">Ready when you are. Run a search to see the selected algorithm and the reasoning behind it.</p>
+                        <span>Selection rationale</span>
+                        <p id="reason">Run a search to see the strategy details.</p>
                     </div>
                 </section>
 
@@ -321,9 +328,9 @@
                 <section class="card">
                     <div class="card-header">
                         <div class="card-title-group">
-                            <span class="label">03 / RESULTS</span>
                             <h3>Best solution</h3>
                             <span class="card-subtitle">Best-found score and coordinates from your search.</span><p id="searchOutcome" class="card-subtitle" role="status"></p>
+                            <button id="downloadRun" class="secondary-btn run-export hidden" type="button">Download run data</button>
                         </div>
                     </div>
 
@@ -366,19 +373,18 @@
             <section class="card convergence-card">
                 <div class="card-header">
                     <div class="card-title-group">
-                        <span class="label">SEARCH PERFORMANCE</span>
                         <h3>Convergence</h3>
-                        <span class="card-subtitle">Best score across recorded search progress</span>
+                        <span class="card-subtitle">Best verified score by search evaluations</span>
                     </div>
                     <span id="convergenceStatus" class="small-status">No data yet</span>
                 </div>
 
                 <div class="chart-container">
-                    <canvas id="convergenceChart" role="img" aria-label="Convergence chart: objective score by iteration"></canvas>
+                    <canvas id="convergenceChart" role="img" aria-label="Convergence chart: objective score by evaluation"></canvas>
                     <div id="chartEmpty" class="chart-empty">
                         <div>
-                            <strong>No convergence telemetry yet.</strong>
-                            Run optimization to visualize the iteration trajectory.
+                            <strong>No run data yet</strong>
+                            Run a search to see how the best score changes.
                         </div>
                     </div>
                 </div>
@@ -392,7 +398,6 @@
                 <section id="activitySection" class="card">
                     <div class="card-header">
                         <div class="card-title-group">
-                            <span class="label">EXECUTION LOG</span>
                             <h3>Agent activity</h3>
                             <span class="card-subtitle">Follow the decisions made during each run.</span>
                         </div>
@@ -401,7 +406,7 @@
 
                     <div id="activityList" class="history-list" aria-live="polite">
                         <div class="empty-state">
-                            Run OptiAgent to stream live agent activity.
+                            The log shows stage results after a run.
                         </div>
                     </div>
                 </section>
@@ -409,7 +414,6 @@
                 <section class="card">
                     <div class="card-header">
                         <div class="card-title-group">
-                            <span class="label">ADAPTATION HISTORY</span>
                             <h3>Stage history</h3>
                             <span class="card-subtitle">Review algorithm changes and stage scores.</span>
                         </div>
@@ -433,7 +437,6 @@
             <section class="card ask-ai-card">
                 <div class="card-header">
                     <div class="card-title-group">
-                        <span class="label">UNDERSTAND YOUR SEARCH</span>
                         <h3>Understand your results</h3>
                         <span class="card-subtitle">Explore the reasoning behind the algorithms.</span>
                     </div>
@@ -490,9 +493,8 @@
             </div>
             <div class="modal-body">
                 <p style="font-size:12px; color:var(--text-secondary); margin-bottom:16px;">
-                    OptiAgent operates an autonomous closed-loop agent cycle. Instead of statically choosing an optimizer, 
-                    the agent reasons over problem features, executes multi-stage numerical passes, validates results, 
-                    and dynamically adapts when stagnation is detected.
+                    Each stage searches within the supplied bounds and checks the best candidate by evaluating the objective again.
+                    The run ends at the stage, time, or evaluation limit.
                 </p>
 
                 <div class="arch-flow-grid">
@@ -502,15 +504,15 @@
                     </div>
                     <div class="arch-node">
                         <strong>2. Reason</strong>
-                        <p>AI evaluates multimodal landscape ruggedness, curvature, and previous stage convergence slope.</p>
+                        <p>The parser checks whether coordinates can be searched independently.</p>
                     </div>
                     <div class="arch-node">
                         <strong>3. Decide</strong>
-                        <p>Autonomous selection from the available optimizer classes (CMA-ES, PSO, Nelder-Mead, GA, SA, etc.).</p>
+                        <p>Independent coordinates use bounded grid search. For coupled objectives, Gemini or local rules choose an optimizer.</p>
                     </div>
                     <div class="arch-node">
                         <strong>4. Act</strong>
-                        <p>Execute numerical stage with dynamically tuned population and step parameters.</p>
+                        <p>Each stage receives a share of the remaining evaluation budget.</p>
                     </div>
                     <div class="arch-node">
                         <strong>5. Validate</strong>
@@ -518,12 +520,12 @@
                     </div>
                     <div class="arch-node">
                         <strong>6. Adapt</strong>
-                        <p>Stagnation monitor triggers parameter reconfiguration or shifts algorithm class if trapped.</p>
+                        <p>After the configured number of stages without improvement, the next stage changes the sampling grid or restarts the optimizer.</p>
                     </div>
                 </div>
 
                 <div style="font-size:11px; font-family:var(--font-mono); color:var(--text-secondary); border-top:1px solid var(--border-color); padding-top:12px;">
-                    Powered by Google Gemini Automatic Function Calling (AFC) with intelligent local mathematical fallback.
+                    The run file records settings, evaluations, and stage outcomes.
                 </div>
             </div>
         </div>
@@ -533,7 +535,7 @@
     <!-- Footer -->
     <footer>
         <div class="footer-brand">
-            <strong>OptiAgent Studio v1.0</strong> — Autonomous Dynamic Numerical Optimization
+            <strong>OptiAgent</strong>
         </div>
         <div class="footer-links">
             <a href="https://github.com/suhas-2007/OptiAgent" target="_blank" rel="noopener">GitHub Repository</a>
@@ -545,7 +547,7 @@
 
     <!-- JavaScript Execution Engine -->
     <script src="benchmarks.js?v=20261105"></script>
-    <script src="app.js?v=20261105"></script>
+    <script src="app.js?v=20261114"></script>
 
 </body>
 

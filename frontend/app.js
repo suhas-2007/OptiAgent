@@ -167,6 +167,16 @@ document.addEventListener("DOMContentLoaded", () => {
     setupSmartInput();
     setupAskAI();
     setupArchitectureModal();
+    $("downloadRun").addEventListener("click", () => {
+        const result = window.lastOptimizationResult;
+        if (!result) return;
+        const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], {type:"application/json"}));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "optiagent-run.json";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
     const upload = $("dropZone");
     if (upload) upload.addEventListener("keydown", e => {
         if (e.target === upload && (e.key === "Enter" || e.key === " ")) {
@@ -219,7 +229,7 @@ function selectedBenchmark(n) {
 function generateBounds() {
     if (!dimensionsInput || !boundsContainer) return;
 
-    const dimensions = parseInt(dimensionsInput.value, 10);
+    const dimensions = Number(dimensionsInput.value);
     if (!Number.isInteger(dimensions) || dimensions < 1 || dimensions > 100) {
         boundsContainer.innerHTML = "";
         return;
@@ -358,7 +368,7 @@ function setRunning(running) {
         optimizeButton.disabled = running;
     }
     if (buttonText) {
-        buttonText.textContent = running ? "Agent is optimizing..." : "Run OptiAgent";
+        buttonText.textContent = running ? "Running search…" : "Run OptiAgent";
     }
     if (buttonLoader) {
         buttonLoader.classList.toggle("hidden", !running);
@@ -433,12 +443,22 @@ function clearError() {
 
 // Primary Optimization Execution Loop
 async function runOptimization() {
-    console.log("RUN OPTIMIZATION CALLED", new Date().toISOString());
 
     try {
         clearError();
         setRunning(true);
         clearActivity();
+        window.lastOptimizationResult = null;
+        $("downloadRun").classList.add("hidden");
+        $("searchOutcome").textContent = "Waiting for the server";
+        [strategyElement, confidenceElement, explorationElement, bestScoreElement,
+            bestPositionElement, stageCountElement, strategyCountElement].forEach(element => {
+            if (element) element.textContent = "—";
+        });
+        if (reasonElement) reasonElement.textContent = "Strategy details appear when the server responds.";
+        if (convergenceStatus) convergenceStatus.textContent = "Waiting for run data";
+        displayStrategyHistory([]);
+        drawConvergenceChart(null);
         setActivityStatus("Running");
 
         const copyScoreBtn = $("copyScoreBtn");
@@ -452,18 +472,15 @@ async function runOptimization() {
             agentBadge.classList.add("running");
         }
 
-        // STEP 1: OBSERVE
-        setAgentStep("observe");
-        addActivity("Agent started", "Beginning autonomous multi-stage optimization cycle.", "active");
-
+        setAgentStep(null);
         if (!objectiveInput || !dimensionsInput || !maxStagesInput || !patienceInput) {
             throw new Error("Required input elements are missing from application.");
         }
 
         const objective = objectiveInput.value.trim();
-        const dimensions = parseInt(dimensionsInput.value, 10);
-        const maxStages = parseInt(maxStagesInput.value, 10);
-        const patience = parseInt(patienceInput.value, 10);
+        const dimensions = Number(dimensionsInput.value);
+        const maxStages = Number(maxStagesInput.value);
+        const patience = Number(patienceInput.value);
 
         if (!objective) {
             throw new Error("Please enter an objective function expression.");
@@ -473,33 +490,31 @@ async function runOptimization() {
             throw new Error("Number of dimensions must be between 1 and 100.");
         }
 
-        if (!Number.isInteger(maxStages) || maxStages < 1 || maxStages > 20) {
-            throw new Error("Maximum stages must be between 1 and 20.");
+        if (!Number.isInteger(maxStages) || maxStages < 1 || maxStages > 50) {
+            throw new Error("Maximum stages must be between 1 and 50.");
         }
 
-        if (!Number.isInteger(patience) || patience < 1 || patience > 20) {
-            throw new Error("Patience must be between 1 and 20.");
+        if (!Number.isInteger(patience) || patience < 1 || patience > 50) {
+            throw new Error("Patience must be between 1 and 50.");
         }
 
         const bounds = getBounds();
 
-        addActivity("Problem observed", `Parsed ${dimensions}-dimensional formulation: f(x) = ${objective}`, "complete");
-        addActivity("Search space validated", `${dimensions} variable bounds verified within safe continuous domain.`, "complete");
-
-        // STEP 2: REASON
-        setAgentStep("reason");
-        setActivityStatus("Reasoning");
-        addActivity("Agent reasoning", "Analyzing objective landscape topology, modality, and valley traps.", "active");
-
+        if (bounds.length !== dimensions) throw new Error("Enter one bound pair per dimension.");
         const payload = {
-            objective: objective,
-            dimensions: dimensions,
-            bounds: bounds,
-            max_stages: maxStages,
-            patience: patience
+            objective, dimensions, bounds,
+            max_stages: maxStages, patience,
+            planner_mode: $("plannerMode").value
         };
-
-        addActivity("Requesting strategic decision", "Sending problem context to Gemini AI Planner.", "active");
+        for (const [id, key] of [["evaluationBudget", "max_evaluations"],
+                                 ["timeLimit", "time_limit_seconds"], ["runSeed", "random_seed"]]) {
+            const input = $(id);
+            if (!input.reportValidity()) throw new Error("Check the search settings.");
+            if (input.value !== "") payload[key] = Number(input.value);
+        }
+        setAgentStep("observe");
+        setActivityStatus("Waiting for server");
+        addActivity("Request sent", `${dimensions} dimensions, up to ${maxStages} stages`, "active");
 
         const response = await fetch(`${API_URL}/optimize`, {
             method: "POST",
@@ -520,55 +535,30 @@ async function runOptimization() {
             throw new Error(data.error || `Optimization failed with HTTP ${response.status}.`);
         }
 
-        // STEP 3: DECIDE
-        setAgentStep("decide");
-        setActivityStatus("Strategy selected");
-
-        const selectedStrategy = extractStrategy(data);
-        addActivity(
-            "Strategy selected",
-            selectedStrategy ? `AI selected ${selectedStrategy} optimizer.` : "Strategic algorithm selection complete.",
-            "complete"
-        );
-
-        await sleep(150);
-
-        // STEP 4: ACT
-        setAgentStep("act");
-        setActivityStatus("Optimizing");
-        addActivity("Optimization executing", "Numerical search stage executing across continuous parameter space.", "active");
-
-        await sleep(150);
-
-        // STEP 5: VALIDATE
-        setAgentStep("validate");
-        setActivityStatus("Validating");
-        addActivity("Solution validated", "Independent AST validator verified bounds and re-computed f(x*).", "complete");
-
-        await sleep(150);
-
-        // STEP 6: ADAPT
-        const stages = Array.isArray(data.stage_history) ? data.stage_history : [];
-
-        if (stages.length > 1) {
-            setAgentStep("adapt");
-            setActivityStatus("Adapted");
-            addActivity("Agent adapted", `Executed ${stages.length} stages with dynamic stagnation recovery.`, "complete");
-        } else {
-            const validateSteps = document.querySelectorAll(".pipeline-step");
-            validateSteps.forEach((el) => {
-                if (el.dataset.step === "validate") {
-                    el.classList.remove("active");
-                    el.classList.add("complete");
-                }
-            });
-            setActivityStatus("Complete");
+        const stages = data.stage_history || [];
+        for (const stage of stages) {
+            const source = strategySource(stage.recommendation?.source);
+            const status = stage.restarted ? " · Restart" : "";
+            addActivity(`Stage ${stage.stage}${status}`,
+                `${stage.strategy} · ${source} · ${stage.stage_evaluations ?? "—"} evaluations · ${stopLabel(stage.outcome)}`, "complete");
         }
-
-        addActivity("Search complete", `Best-found score ${formatNumber(data.best_score)}. Global optimality is not certified.`, "complete");
-
+        setAgentStep(null);
+        const completed = new Set(["observe"]);
+        if (stages.length) completed.add("act");
+        if (stages.some(stage => stage.recommendation?.source !== "initial_sampling")) {
+            completed.add("reason");
+            completed.add("decide");
+        }
+        if (stages.some(stage => stage.reliable)) completed.add("validate");
+        if (stages.some(stage => stage.restarted)) completed.add("adapt");
+        document.querySelectorAll(".pipeline-step").forEach(step => {
+            step.classList.toggle("complete", completed.has(step.dataset.step));
+        });
+        setActivityStatus("Complete");
+        addActivity("Search ended", stopLabel(data.termination_reason), "complete");
         displayResult(data);
-        window.lastOptimizationResult = data;
+        window.lastOptimizationResult = {...data, request: payload};
+        $("downloadRun").classList.remove("hidden");
         drawConvergenceChart(data);
 
         if (connectionStatus) {
@@ -586,6 +576,8 @@ async function runOptimization() {
             agentBadge.classList.remove("complete");
         }
 
+        $("searchOutcome").textContent = "Run failed";
+        setAgentStep(null);
         setActivityStatus("Error");
         addActivity("Optimization failed", error.message || "Unknown error encountered.", "error");
         showError(error.message);
@@ -629,13 +621,33 @@ function extractRecommendation(data) {
 }
 
 // Display results in UI
+function stopLabel(reason) {
+    const labels = {
+        stage_limit: "Stage limit reached", time_limit: "Time limit reached",
+        evaluation_limit: "Evaluation limit reached", stage_budget: "Stage budget used",
+        search_completed: "Search completed", separable_search_complete: "Coordinate search completed"
+    };
+    return labels[reason] || "Search ended";
+}
+
+function strategySource(source) {
+    const labels = {
+        gemini: "Gemini", local_fallback: "Local planner",
+        structural_analysis: "Independent coordinates", initial_sampling: "Initial sampling",
+        local_override: "Local strategy switch"
+    };
+    return labels[source] || "Source unavailable";
+}
+
 function displayResult(data) {
     const outcome = $("searchOutcome");
     if (outcome) outcome.textContent = [
-        data.termination_reason ? data.termination_reason.replaceAll('_', ' ') : 'Search complete',
-        data.evaluations ? `${data.evaluations} search evaluations` : '',
-        ...(data.warnings || ['Global optimality is not certified.'])
-    ].filter(Boolean).join(' · ');
+        stopLabel(data.termination_reason),
+        `${data.stage_history?.length ?? 0} of ${data.settings?.max_stages ?? "—"} stages`,
+        Number.isFinite(data.evaluations) ? `${data.evaluations.toLocaleString()} search evaluations` : "",
+        Number.isFinite(data.elapsed_seconds) ? `${data.elapsed_seconds.toFixed(2)} s` : "",
+        ...(data.warnings || [])
+    ].filter(Boolean).join(" · ");
 
     if (bestScoreElement) {
         bestScoreElement.textContent = formatNumber(data.best_score);
@@ -709,7 +721,7 @@ function displayResult(data) {
 
     const convergence = Array.isArray(data.convergence_history) ? data.convergence_history : [];
     if (convergenceStatus) {
-        convergenceStatus.textContent = convergence.length > 0 ? `${convergence.length} iterations recorded` : "Complete";
+        convergenceStatus.textContent = convergence.length > 0 ? `${convergence.length} points recorded` : "Complete";
     }
 
     if (agentBadge) {
@@ -774,10 +786,11 @@ function drawConvergenceChart(data) {
         return;
     }
 
-    const values = history.map((point) => {
-        if (typeof point === "number") return Number(point);
-        return Number(point?.score);
-    }).filter(Number.isFinite);
+    const points = history.map((point, index) => ({
+        score: typeof point === "number" ? point : point?.score,
+        evaluations: point?.evaluations ?? index + 1
+    })).filter(point => Number.isFinite(point.score));
+    const values = points.map(point => point.score);
 
     if (values.length < 2) {
         if (chartEmpty) chartEmpty.classList.remove("hidden");
@@ -822,33 +835,10 @@ function drawConvergenceChart(data) {
         context.fillText(formatNumber(value), padding.left - 10, y + 4);
     }
 
-    // Gradient Area Fill Under Curve (Indigo Accent)
-    const areaGradient = context.createLinearGradient(0, padding.top, 0, padding.top + graphHeight);
-    areaGradient.addColorStop(0, "rgba(67, 56, 202, 0.12)");
-    areaGradient.addColorStop(1, "rgba(67, 56, 202, 0.0)");
-
-    context.beginPath();
-    values.forEach((value, index) => {
-        const x = padding.left + graphWidth * (index / (values.length - 1));
-        const y = padding.top + graphHeight * (1 - (value - minValue) / (maxValue - minValue));
-
-        if (index === 0) {
-            context.moveTo(x, y);
-        } else {
-            context.lineTo(x, y);
-        }
-    });
-
-    context.lineTo(padding.left + graphWidth, padding.top + graphHeight);
-    context.lineTo(padding.left, padding.top + graphHeight);
-    context.closePath();
-    context.fillStyle = areaGradient;
-    context.fill();
-
     // Trajectory Line (Deep Indigo #4338CA)
     context.beginPath();
     values.forEach((value, index) => {
-        const x = padding.left + graphWidth * (index / (values.length - 1));
+        const x = padding.left + graphWidth * (points[index].evaluations / (data.evaluations || points.at(-1).evaluations));
         const y = padding.top + graphHeight * (1 - (value - minValue) / (maxValue - minValue));
 
         if (index === 0) {
@@ -864,37 +854,18 @@ function drawConvergenceChart(data) {
     context.lineJoin = "round";
     context.stroke();
 
-    // Data Points
-    values.forEach((value, index) => {
-        const x = padding.left + graphWidth * (index / (values.length - 1));
-        const y = padding.top + graphHeight * (1 - (value - minValue) / (maxValue - minValue));
-
-        context.beginPath();
-        context.arc(x, y, 3, 0, Math.PI * 2);
-        context.fillStyle = (value === minValue) ? "#166534" : "#4338CA";
-        context.fill();
-
-        context.beginPath();
-        context.arc(x, y, 4, 0, Math.PI * 2);
-        context.strokeStyle = "#FFFFFF";
-        context.lineWidth = 1.5;
-        context.stroke();
-    });
-
     // Horizontal Axis Label
     context.fillStyle = "#526175";
     context.font = "12px 'Inter', sans-serif";
     context.textAlign = "center";
-    context.fillText("Recorded search progress", padding.left + graphWidth / 2, height - 12);
-    context.textAlign = "center";
-    context.fillText("Recorded search progress", padding.left + graphWidth / 2, height - 12);
+    context.fillText("Search evaluations", padding.left + graphWidth / 2, height - 12);
 }
 
 // Numerical Formatters
 function formatNumber(value) {
     const number = Number(value);
     if (!Number.isFinite(number)) return "—";
-    if (Math.abs(number) < 1e-8) return "0.000000";
+    if (number === 0) return "0";
     if (Math.abs(number) < 0.001 || Math.abs(number) >= 100000) {
         return number.toExponential(4);
     }
@@ -916,10 +887,6 @@ function escapeHtml(value) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
-}
-
-function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Smart Input: Clipboard Paste & Problem Extraction
