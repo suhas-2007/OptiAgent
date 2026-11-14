@@ -504,7 +504,8 @@ async function runOptimization() {
         const payload = {
             objective, dimensions, bounds,
             max_stages: maxStages, patience,
-            planner_mode: $("plannerMode").value
+            planner_mode: $("plannerMode").value,
+            restart_mode: $("restartMode").value
         };
         for (const [id, key] of [["evaluationBudget", "max_evaluations"],
                                  ["timeLimit", "time_limit_seconds"], ["runSeed", "random_seed"]]) {
@@ -538,7 +539,8 @@ async function runOptimization() {
         const stages = data.stage_history || [];
         for (const stage of stages) {
             const source = strategySource(stage.recommendation?.source);
-            const status = stage.restarted ? " · Restart" : "";
+            const status = stage.restart_samples ? ` · Restart (${stage.restart_samples} candidates)`
+                : stage.restarted ? " · Restart" : "";
             addActivity(`Stage ${stage.stage}${status}`,
                 `${stage.strategy} · ${source} · ${stage.stage_evaluations ?? "—"} evaluations · ${stopLabel(stage.outcome)}`, "complete");
         }

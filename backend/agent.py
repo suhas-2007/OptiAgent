@@ -5,6 +5,7 @@ import sys
 import time
 import numpy as np
 from scipy.optimize import minimize
+from scipy.stats import qmc
 
 _backend_dir = os.path.dirname(os.path.abspath(__file__))
 if _backend_dir not in sys.path:
@@ -12,14 +13,15 @@ if _backend_dir not in sys.path:
 from optimizer_registry import OptimizerRegistry
 from ai_planner import AIPlanner
 from solution_validator import SolutionValidator
-from search import SearchContext, SearchLimit, StageBudgetReached, additive_components, separable_search
+from search import SearchContext, SearchLimit, StageBudgetReached, additive_components, block_search, separable_search
 from differentiation import ExpressionGradient, UnsupportedGradient
 
 
 class OptimizationAgent:
     def __init__(self, objective_function, dimensions, bounds, expression,
                  max_stages=5, patience=3, max_evaluations=None,
-                 time_limit_seconds=45, random_seed=None, planner_mode='auto'):
+                 time_limit_seconds=45, random_seed=None, planner_mode='auto',
+                 restart_mode='uniform'):
         self.dimensions = int(dimensions)
         if not 1 <= self.dimensions <= 100:
             raise ValueError('Dimensions must be between 1 and 100.')
@@ -34,6 +36,10 @@ class OptimizationAgent:
         if planner_mode not in ('auto', 'local'):
             raise ValueError('Planner must be auto or local.')
         self.planner_mode = planner_mode
+        if restart_mode not in ('uniform', 'diverse'):
+            raise ValueError('Restart mode must be uniform or diverse.')
+        self.restart_mode = restart_mode
+        self.restart_samples = 0
         self.max_evaluations = max_evaluations if max_evaluations is not None else min(200000, max(10000, 2000*self.dimensions))
         if not 100 <= self.max_evaluations <= 500000:
             raise ValueError('max_evaluations must be between 100 and 500000.')
@@ -76,23 +82,51 @@ class OptimizationAgent:
         self.current_strategy, self.last_recommendation = selected, rec
         return rec
 
+    def _restart_position(self):
+        lo, hi = self.bounds.T
+        start = self.rng.uniform(lo, hi)
+        available = self.context.stage_end - self.context.evaluations
+        count = min(16, available // 8)
+        incumbent = self.context.best_position
+        if self.restart_mode == 'uniform' or count < 2 or incumbent is None:
+            return start
+
+        sampler = qmc.LatinHypercube(self.dimensions, seed=int(self.rng.integers(2**31)))
+        candidates = list(qmc.scale(sampler.random(count // 2), lo, hi))
+        for index in range(count - len(candidates)):
+            scale = (0.02, 0.08, 0.2)[index % 3]
+            offset = self.rng.normal(size=self.dimensions) * (hi - lo) * scale
+            candidates.append(np.clip(incumbent + offset, lo, hi))
+        best_trial = math.inf
+        for candidate in candidates:
+            score = self.context(candidate)
+            self.restart_samples += 1
+            if score < best_trial:
+                best_trial = score
+                start = candidate
+        return start
+
     def _run_optimizer(self):
-        # Refine a feasible start before population search. This also helps smooth
-        # coupled objectives; it does not assume a benchmark's known solution.
+        # Refine a feasible start before population search.
         start = (self.context.best_position.copy() if self.context.best_position is not None
                  else (self.bounds[:, 0]+self.bounds[:, 1])/2)
         if self.restart:
-            start = self.rng.uniform(self.bounds[:, 0], self.bounds[:, 1])
+            start = self._restart_position()
         allowance = max(1, min(50000, (self.context.stage_end-self.context.evaluations)//3))
         calls = 0
+        trial_position = start.copy()
+        trial_score = math.inf
         class RefinementLimit(Exception):
             pass
         def refine_objective(point):
-            nonlocal calls
+            nonlocal calls, trial_position, trial_score
             if calls >= allowance:
                 raise RefinementLimit()
             calls += 1
-            return self.context(point)
+            score = self.context(point)
+            if score < trial_score:
+                trial_position, trial_score = point.copy(), score
+            return score
         try:
             # Use exact expression derivatives when available; retain finite
             # differences for unsupported operations or singular start points.
@@ -107,7 +141,10 @@ class OptimizationAgent:
                                options={'maxiter':2000, 'ftol':1e-13, 'gtol':1e-7, 'maxls':30})
             start = refined.x
         except (RefinementLimit, UnsupportedGradient):
-            start = self.context.best_position.copy() if self.context.best_position is not None else start
+            if self.restart and self.restart_mode == 'diverse':
+                start = trial_position
+            else:
+                start = self.context.best_position.copy() if self.context.best_position is not None else start
         seed = int(self.rng.integers(0, 2**31-1))
         optimizer = self.registry.create(self.current_strategy, self.context,
                                          self.dimensions, self.bounds, seed=seed)
@@ -142,6 +179,7 @@ class OptimizationAgent:
             'verified_score':checked['actual_score'], 'global_best_score':checked['actual_score'],
             'improved': improved, 'trend':'improving' if improved else 'flat', 'stagnating':not improved,
             'reliable':bool(checked['reliable']), 'restarted':self.restart,
+            'restart_samples':self.restart_samples,
             'recommendation':self.last_recommendation.copy(), 'outcome':outcome,
             'stage_evaluations':self.context.evaluations-first_evaluation,
             'elapsed_seconds':time.monotonic()-started, 'evaluations':self.context.evaluations})
@@ -154,6 +192,8 @@ class OptimizationAgent:
         self.context = SearchContext(self.objective_function, self.bounds,
                                      self.max_evaluations, self.time_limit_seconds)
         components = additive_components(self.objective_function, self.dimensions)
+        blocks = (additive_components(self.objective_function, self.dimensions, pairs=True)
+                  if components is None and self.dimensions > 2 else None)
         termination = 'stage_limit'
         stages_without_improvement = 0
         if components is not None:
@@ -166,6 +206,13 @@ class OptimizationAgent:
                 'source': 'structural_analysis',
                 'reason': 'Search independent coordinates on bounded grids and refine sampled minima.'
             }
+        elif blocks:
+            self.current_strategy = 'Independent block search'
+            self.last_recommendation = {
+                'success': True, 'recommended_strategy': self.current_strategy,
+                'confidence': None, 'exploration_level': 'high', 'source': 'structural_analysis',
+                'reason': 'Search independent groups of up to two variables, then score the combined point.',
+            }
         try:
             for stage in range(1, self.max_stages + 1):
                 self.context.begin_stage(self.max_stages - stage + 1)
@@ -173,6 +220,7 @@ class OptimizationAgent:
                 start = len(self.context.improvements)
                 first_evaluation = self.context.evaluations
                 started = time.monotonic()
+                self.restart_samples = 0
                 outcome = 'search_completed'
                 try:
                     if components is not None:
@@ -182,6 +230,11 @@ class OptimizationAgent:
                         offset = (stage - 1) * self.dimensions // self.max_stages
                         separable_search(self.context, components, position,
                                          rng=self.rng if stage > 1 else None, offset=offset)
+                    elif blocks:
+                        position = self.context.best_position
+                        if position is None:
+                            position = self.bounds.mean(axis=1)
+                        block_search(self.context, blocks, position, self.rng, stage)
                     else:
                         if stage == 1:
                             self.context(self.bounds[:, 0] / 2 + self.bounds[:, 1] / 2)
@@ -206,7 +259,7 @@ class OptimizationAgent:
                     improved = self._record_stage(stage, start, first_evaluation,
                                                   previous_best, outcome, started)
                     stages_without_improvement = 0 if improved else stages_without_improvement + 1
-                    self.restart = stages_without_improvement >= self.patience
+                    self.restart = not blocks and stages_without_improvement >= self.patience
                     if self.restart:
                         stages_without_improvement = 0
                 if outcome in ('time_limit', 'evaluation_limit'):
@@ -229,5 +282,6 @@ class OptimizationAgent:
             'elapsed_seconds':time.monotonic()-self.context.started,
             'settings': {'max_stages':self.max_stages, 'patience':self.patience,
                          'max_evaluations':self.max_evaluations, 'time_limit_seconds':self.time_limit_seconds,
-                         'random_seed':self.random_seed, 'planner_mode':self.planner_mode},
+                         'random_seed':self.random_seed, 'planner_mode':self.planner_mode,
+                         'restart_mode':self.restart_mode},
             'warnings':['Numerical search returned the best verified candidate; global optimality is not certified.']}

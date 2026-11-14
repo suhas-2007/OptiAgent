@@ -7,7 +7,8 @@ import ast
 import math
 import time
 import numpy as np
-from scipy.optimize import minimize_scalar
+from scipy.optimize import minimize, minimize_scalar
+from scipy.stats import qmc
 
 
 class SearchLimit(RuntimeError):
@@ -74,11 +75,12 @@ class SearchContext:
         return result if math.isfinite(result) else math.inf
 
 
-def additive_components(objective, dimensions):
+def additive_components(objective, dimensions, *, pairs=False):
     """Prove syntactic additive separability, conservatively; otherwise return None.
 
     Distribute only constant multiplication/division over sums. Products,
-    powers, and function calls involving multiple coordinates remain coupled.
+    powers, and function calls can join two coordinates in pair mode.
+    Overlapping pairs are rejected.
     Every term is evaluated by the original safe AST interpreter.
     """
     if not hasattr(objective, 'tree') or not hasattr(objective, '_evaluate'):
@@ -115,26 +117,92 @@ def additive_components(objective, dimensions):
             split(node.left, coefficient / value)
         else:
             used = dependencies(node)
-            if len(used) > 1:
+            if len(used) > (2 if pairs else 1):
                 raise ValueError('Coupled term')
             if used:
-                terms.append((next(iter(used)), coefficient, node))
+                terms.append((used, coefficient, node))
 
     try:
         split(objective.tree.body)
     except (ValueError, OverflowError, RecursionError):
         return None
-    groups = [[] for _ in range(dimensions)]
-    for index, coefficient, node in terms:
-        groups[index].append((coefficient, node))
+    groups = [(i,) for i in range(dimensions)]
+    for used, _, _ in terms:
+        if len(used) == 2:
+            a, b = sorted(used)
+            pair = (a, b)
+            if groups[a] not in ((a,), pair) or groups[b] not in ((b,), pair):
+                return None
+            groups[a] = groups[b] = pair
 
-    def make_component(index, group):
-        names = [name for name, coordinate in aliases.items() if coordinate == index]
+    by_group = {}
+    for used, coefficient, node in terms:
+        group = groups[min(used)]
+        by_group.setdefault(group, []).append((coefficient, node))
+
+    def make_component(indices, group):
+        coordinates = {index: i for i, index in enumerate(indices)}
+        names = [(name, coordinates[index]) for name, index in aliases.items() if index in coordinates]
         def component(value):
-            variables = dict.fromkeys(names, value)
+            values = value if pairs else (value,)
+            variables = {name: values[index] for name, index in names}
             return sum(coefficient * objective._evaluate(node, variables) for coefficient, node in group)
         return component
-    return [make_component(i, group) if group else None for i, group in enumerate(groups)]
+    if pairs:
+        return [(indices, make_component(indices, group)) for indices, group in sorted(by_group.items())]
+    return [make_component((i,), by_group[(i,)]) if (i,) in by_group else None for i in range(dimensions)]
+
+
+class ComponentBudgetReached(Exception):
+    pass
+
+
+def block_search(context, blocks, position, rng, stage):
+    """Search disjoint one- and two-variable terms and evaluate the combined point."""
+    position = np.asarray(position, dtype=float).copy()
+    context(position)
+    offset = (stage - 1) % len(blocks)
+    for count, (indices, component) in enumerate(blocks[offset:] + blocks[:offset]):
+        allowance = (context.stage_end - context.evaluations) // (len(blocks) - count) - 1
+        if allowance < 3:
+            break
+        indices = list(indices)
+        bounds = context.bounds[indices]
+        lo, hi = bounds.T
+        best = position[indices]
+        best_score = math.inf
+        end = context.evaluations + allowance
+
+        def evaluate(point):
+            nonlocal best, best_score
+            if context.evaluations >= end:
+                raise ComponentBudgetReached()
+            score = context.component(component, point)
+            if score < best_score:
+                best, best_score = np.array(point, dtype=float, copy=True), score
+            return score
+
+        evaluate(best)
+        sample_count = min(24, max(1, allowance // 4))
+        sampler = qmc.LatinHypercube(len(indices), seed=int(rng.integers(2**31)))
+        samples = qmc.scale(sampler.random(sample_count), lo, hi)
+        local_count = sample_count // 2
+        if local_count:
+            scale = (0.04, 0.08, 0.16)[(stage - 1) % 3]
+            local = best + rng.normal(size=(local_count, len(indices))) * (hi - lo) * scale
+            samples[:local_count] = np.clip(local, lo, hi)
+        ranked = sorted(((evaluate(point), i) for i, point in enumerate(samples)))
+        starts = [samples[index] for _, index in ranked[:4]]
+        if stage == 1:
+            starts.insert(0, lo / 2 + hi / 2)
+        for start in starts:
+            try:
+                minimize(evaluate, start, method='L-BFGS-B', bounds=bounds,
+                         options={'ftol': 1e-14, 'gtol': 1e-8, 'maxiter': 35 if stage == 1 else 16})
+            except ComponentBudgetReached:
+                break
+        position[indices] = best
+        context(position)
 
 
 def separable_search(context, components, initial_position, rng=None, offset=0):

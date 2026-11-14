@@ -55,9 +55,11 @@ def test_budget_interruption_returns_verified_incumbent():
     assert not result['global_optimum_certified']
 
 
-def test_restart_is_real_and_negative_scores_do_not_stop_early(monkeypatch):
+@pytest.mark.parametrize('restart_mode, expected_samples', [('uniform', 0), ('diverse', 16)])
+def test_restart_is_real_and_negative_scores_do_not_stop_early(monkeypatch, restart_mode, expected_samples):
     f=SafeFunction('(x1+x2)**2-100')
-    agent=OptimizationAgent(f,2,[[-1,1]]*2,f.expression,max_stages=3,patience=1,random_seed=3)
+    agent=OptimizationAgent(f,2,[[-1,1]]*2,f.expression,max_stages=3,patience=1,random_seed=3,
+                            planner_mode='local', restart_mode=restart_mode)
     def plan(**kwargs):
         return {'recommended_strategy':'Differential Evolution','source':'test','confidence':0.5}
     monkeypatch.setattr(agent.planner,'recommend_strategy',plan)
@@ -76,6 +78,18 @@ def test_restart_is_real_and_negative_scores_do_not_stop_early(monkeypatch):
     assert len(set(seeds))==3
     assert not result['stage_history'][1]['restarted']
     assert result['stage_history'][2]['restarted']
+    assert result['stage_history'][2]['restart_samples'] == expected_samples
+    assert result['settings']['restart_mode'] == restart_mode
+
+
+def test_api_accepts_restart_sampling_and_rejects_unknown_modes():
+    payload = dict(benchmark='sphere', dimensions=2, bounds=[[-5, 5]] * 2,
+                   max_stages=1, max_evaluations=100, planner_mode='local')
+    with app.test_client() as client:
+        response = client.post('/optimize', json=dict(payload, restart_mode='diverse'))
+        assert response.status_code == 200
+        assert response.get_json()['settings']['restart_mode'] == 'diverse'
+        assert client.post('/optimize', json=dict(payload, restart_mode='invalid')).status_code == 400
 
 
 def test_100_dimensional_api_response_and_unused_variable_warning():
@@ -146,3 +160,20 @@ def test_api_runs_configured_stages_on_both_search_paths(expression):
     assert result['convergence_history'] == repeat['convergence_history']
     assert result['best_position'] == repeat['best_position']
     assert result['settings']['random_seed'] == 17
+def test_shifted_rotated_pairs_at_100_dimensions():
+    n = 100
+    pairs = [f'((x{i}{op}x{i+1})/sqrt(2){shift})'
+             for i in range(1, n, 2) for op, shift in (('-', '-0.317'), ('+', '+0.271'))]
+    expression = f'{10*n} + ' + ' + '.join(f'{point}**2 - 10*cos(2*pi*{point})' for point in pairs)
+    objective = SafeFunction(expression)
+    result = OptimizationAgent(objective, n, [[-5.12, 5.12]] * n, expression,
+                               max_stages=10, max_evaluations=100000, time_limit_seconds=90,
+                               random_seed=7, planner_mode='local').optimize()
+    assert result['recommendation']['recommended_strategy'] == 'Independent block search'
+    assert abs(result['best_score']) < 1e-6
+    assert result['evaluations'] <= 100000
+
+
+def test_block_detection_rejects_overlapping_pairs():
+    objective = SafeFunction('(x1+x2)**2 + (x2-x3)**2')
+    assert additive_components(objective, 3, pairs=True) is None

@@ -415,6 +415,7 @@ def optimize():
             time_limit_seconds=time_limit,
             random_seed=random_seed,
             planner_mode=data.get("planner_mode", "auto"),
+            restart_mode=data.get("restart_mode", "uniform"),
         )
 
         # run optimization

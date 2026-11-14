@@ -1,5 +1,11 @@
 # Search up to 100 dimensions
 
+For additive objectives with disjoint groups of up to two interacting variables,
+OptiAgent searches each group independently and checks the combined point against
+the full expression. For example, a sum involving pairs `(x1, x2)` and `(x3, x4)`
+can take this path. A term that links the pairs sends the objective through the
+general optimizer. Component calls count toward the same search budget.
+
 ## Run protocol
 
 Both independent-coordinate and coupled objectives use the stage loop.

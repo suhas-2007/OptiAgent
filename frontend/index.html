@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="OptiAgent — Autonomous Agentic Numerical Optimization Studio with Dynamic Multi-Stage AI Reasoning and Validation">
     <title>OptiAgent — Autonomous Optimization Studio</title>
-    <link rel="stylesheet" href="style.css?v=20261114">
+    <link rel="stylesheet" href="style.css?v=restart-study">
 </head>
 
 <body>
@@ -137,7 +137,6 @@
                     <div class="smart-input-box">
                         <div class="smart-input-header">
                             <div class="smart-badge-group">
-                                <span class="smart-badge">IMPORT</span>
                                 <span class="smart-title">Start with a name or screenshot</span>
                             </div>
                             <span class="smart-hint">Or enter an expression below</span>
@@ -241,7 +240,12 @@
                                 <label for="plannerMode">Strategy planner</label>
                                 <select id="plannerMode"><option value="auto">Gemini with local fallback</option><option value="local">Local only</option></select>
                             </div>
+                            <div class="form-group">
+                                <label for="restartMode">Restart sampling</label>
+                                <select id="restartMode"><option value="uniform">Uniform</option><option value="diverse">Diverse</option></select>
+                            </div>
                         </div>
+                        <p class="restart-hint">Diverse sampling tries points across the bounds and near the best point when variables interact.</p>
                     </details>
                     <!-- Variable Bounds Table -->
                     <div class="form-group" style="margin-top:14px; margin-bottom:0;">
@@ -440,7 +444,6 @@
                         <h3>Understand your results</h3>
                         <span class="card-subtitle">Explore the reasoning behind the algorithms.</span>
                     </div>
-                    <span class="badge">INTERACTIVE</span>
                 </div>
 
                 <p class="section-desc">
@@ -547,7 +550,7 @@
 
     <!-- JavaScript Execution Engine -->
     <script src="benchmarks.js?v=20261105"></script>
-    <script src="app.js?v=20261114"></script>
+    <script src="app.js?v=restart-study"></script>
 
 </body>
 
