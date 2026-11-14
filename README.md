@@ -6,6 +6,14 @@ counts, and strategy used in each stage.
 
 [Open the dashboard](https://optiagent-frontend-272474227005.asia-south1.run.app/) · [API health](https://optiagent-272474227005.asia-south1.run.app/health)
 
+## Why this project exists
+
+An optimizer that works well on a smooth bowl can get stuck on a function with
+many local minima. OptiAgent lets you define the problem once and inspect how
+the search responds to its structure and to stalled progress. The central
+research question is whether that workflow reaches better results than a
+fixed optimizer under a comparable budget.
+
 ## Try a function
 
 1. Choose a benchmark or enter a formula using `x1`, `x2`, and so on. Use
@@ -18,6 +26,17 @@ counts, and strategy used in each stage.
 
 To search for a maximum, minimize the negated formula. Keep the returned
 coordinates and reverse the sign of the score.
+
+The parser accepts arithmetic, parentheses, and `sin`, `cos`, `tan`, `exp`,
+`sqrt`, `log`, and `abs`. It recognizes the constants `pi` and `e`. Bounds
+must be finite and increasing. Choose bounds compatible with the function's
+domain, such as positive inputs to `log`.
+
+| Presets | Dimensions |
+| --- | --- |
+| Sphere, Rastrigin, Ackley, Shifted Quadratic, Trigonometric | 1–100 |
+| Rosenbrock | 2–100 |
+| Beale, Booth, Himmelblau | Standard at 2D. Other dimensions use sums of independent 2D copies, with a squared term for an extra variable. |
 
 ## How the search works
 
@@ -37,6 +56,40 @@ stalls, the general search can restart and switch optimizers. The optional
 The validator checks the candidate's bounds and recalculates its score. The
 result is the best verified point found within the budget. The search can miss
 a better point elsewhere inside the bounds.
+
+### What happens during a run
+
+```text
+Browser form
+    ↓
+Flask API validates the expression and bounds
+    ↓
+Check for independent coordinates or pairs
+    ↓
+Search components, or use local refinement and a selected optimizer
+    ↓
+Recalculate the best score and check bounds
+    ↓
+Record the stage, then continue until a run limit is reached
+    ↓
+Return results and convergence history to the browser
+```
+
+The registry contains Differential Evolution, CMA-ES, Particle Swarm
+Optimization, Genetic Algorithm, Simulated Annealing, Hill Climbing, and
+Nelder-Mead. Local refinement can use expression derivatives where supported.
+The dashboard shows the returned stage records after the request completes.
+
+### Search settings
+
+| Setting | What it controls |
+| --- | --- |
+| Max stages | Up to 50 search stages. A run may stop earlier. |
+| Restart patience | Consecutive stages without meaningful improvement before a restart in the general search. |
+| Evaluation limit | Total search calls. Component and full-objective calls are reported separately. |
+| Time limit | Up to 90 seconds of search, checked cooperatively. |
+| Random seed | Repeats comparable local-planner runs when the evaluation budget determines the stop. |
+| Restart sampling | Uniform or Diverse sampling for restarts in the general search. |
 
 ## Run locally
 
@@ -77,6 +130,22 @@ Send this JSON to `POST /optimize` on the backend at
 The response includes `best_position`, `best_score`, `stage_history`,
 `settings`, and `termination_reason`.
 
+## Where to read the code
+
+| Path | Purpose |
+| --- | --- |
+| [frontend/](frontend/) | HTML, CSS, and JavaScript for configuration, convergence, and export. |
+| [backend/api.py](backend/api.py) | Flask routes, request validation, and JSON responses. |
+| [backend/function_parser.py](backend/function_parser.py) | Restricted evaluation of mathematical expressions. |
+| [backend/search.py](backend/search.py) | Evaluation accounting and search over independent coordinates or pairs. |
+| [backend/agent.py](backend/agent.py) | Stage loop, planner decisions, restarts, and result validation. |
+| [backend/optimizer_registry.py](backend/optimizer_registry.py) | Creates the numerical optimizer selected for a stage. |
+| [optimizer_study.py](optimizer_study.py) | Runs the seeded comparison and writes CSV summaries. |
+
+The frontend uses plain browser APIs. Flask handles requests, NumPy stores
+search vectors, SciPy provides numerical solvers, and Gunicorn serves the
+deployed API. Gemini is optional.
+
 ## Reproduce the benchmarks
 
 ```sh
@@ -87,6 +156,13 @@ python optimizer_study.py --output study-results --budget 4000
 The study compares both restart modes with standalone Differential Evolution
 and OptiAgent's CMA-ES. Use the local planner and a recorded seed when comparing
 runs. Keep bounds, software versions, and evaluation budgets fixed.
+
+One useful test is shifted, pairwise-rotated Rastrigin at 100D. With 10 stages
+and a 100,000-evaluation cap, three local runs reached within `2.2e-14` of
+zero. That objective splits into independent pairs. The result does not
+establish accuracy on objectives whose variables all interact. When reporting
+results, include the seed count, stopping reason, and gap from the known
+minimum.
 
 [Study protocol](OPTIMIZER_STUDY.md) · [Search settings and limitations](SCALABLE_SEARCH.md)
 
