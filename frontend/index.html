@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="OptiAgent — Autonomous Agentic Numerical Optimization Studio with Dynamic Multi-Stage AI Reasoning and Validation">
     <title>OptiAgent — Autonomous Optimization Studio</title>
-    <link rel="stylesheet" href="style.css?v=restart-study">
+    <link rel="stylesheet" href="style.css?v=search-direction">
 </head>
 
 <body>
@@ -46,7 +46,7 @@
         <section class="hero" aria-labelledby="pageTitle">
             <div class="hero-main">
                 <h1 id="pageTitle">Numerical optimization</h1>
-                <p>Minimize an expression over bounded variables and compare search stages.</p>
+                <p>Find a low or high point within bounds and review each search stage.</p>
             </div>
         </section>
 
@@ -167,12 +167,21 @@
 
 
                     <!-- Objective Function Input -->
-                    <div class="form-group">
+                    <div class="objective-fields">
+                      <div class="form-group">
                         <label for="objective">
                             <span>Objective function f(x)</span>
                             <span class="label-hint">Python math syntax (x1, x2...)</span>
                         </label>
                         <input id="objective" class="code-input" type="text" value="x1**2 + x2**2" autocomplete="off" spellcheck="false">
+                      </div>
+                      <div class="form-group">
+                          <label for="searchDirection">Direction</label>
+                          <select id="searchDirection">
+                              <option value="minimize">Minimize</option>
+                              <option value="maximize">Maximize</option>
+                          </select>
+                      </div>
                     </div>
 
                     <!-- Benchmark Examples -->
@@ -302,7 +311,7 @@
                         <div class="card-title-group">
                             <h3>Agent strategy</h3>
                         </div>
-                        <span id="agentBadge" class="badge">IDLE</span>
+                        <span id="agentBadge" class="badge">Idle</span>
                     </div>
 
                     <div class="strategy-box">
@@ -511,7 +520,7 @@
                     </div>
                     <div class="arch-node">
                         <strong>3. Decide</strong>
-                        <p>Independent coordinates use bounded grid search. For coupled objectives, Gemini or local rules choose an optimizer.</p>
+                        <p>Search independent coordinates or pairs directly. When more variables interact, Gemini or local rules choose an optimizer.</p>
                     </div>
                     <div class="arch-node">
                         <strong>4. Act</strong>
@@ -550,7 +559,7 @@
 
     <!-- JavaScript Execution Engine -->
     <script src="benchmarks.js?v=20261105"></script>
-    <script src="app.js?v=restart-study"></script>
+    <script src="app.js?v=search-direction"></script>
 
 </body>
 

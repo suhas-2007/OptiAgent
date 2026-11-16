@@ -467,7 +467,7 @@ async function runOptimization() {
         if (copyPosBtn) copyPosBtn.disabled = true;
 
         if (agentBadge) {
-            agentBadge.textContent = "RUNNING";
+            agentBadge.textContent = "Running";
             agentBadge.classList.remove("complete");
             agentBadge.classList.add("running");
         }
@@ -502,7 +502,7 @@ async function runOptimization() {
 
         if (bounds.length !== dimensions) throw new Error("Enter one bound pair per dimension.");
         const payload = {
-            objective, dimensions, bounds,
+            objective, dimensions, bounds, direction: $("searchDirection").value,
             max_stages: maxStages, patience,
             planner_mode: $("plannerMode").value,
             restart_mode: $("restartMode").value
@@ -534,6 +534,9 @@ async function runOptimization() {
 
         if (!response.ok || !data.success) {
             throw new Error(data.error || `Optimization failed with HTTP ${response.status}.`);
+        }
+        if (payload.direction === "maximize" && data.direction !== "maximize") {
+            throw new Error("Maximize is unavailable on this server version.");
         }
 
         const stages = data.stage_history || [];
@@ -573,7 +576,7 @@ async function runOptimization() {
         console.error("Optimization error:", error);
 
         if (agentBadge) {
-            agentBadge.textContent = "ERROR";
+            agentBadge.textContent = "Error";
             agentBadge.classList.remove("running");
             agentBadge.classList.remove("complete");
         }
@@ -727,7 +730,7 @@ function displayResult(data) {
     }
 
     if (agentBadge) {
-        agentBadge.textContent = "COMPLETE";
+        agentBadge.textContent = "Complete";
         agentBadge.classList.remove("running");
         agentBadge.classList.add("complete");
     }

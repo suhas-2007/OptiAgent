@@ -21,11 +21,12 @@ fixed optimizer under a comparable budget.
 2. Set one lower and upper bound per variable. For a first run, choose **Beale**
    at two dimensions with bounds of `[-4.5, 4.5]`. Its minimum is `0` at
    `[3, 0.5]`.
-3. Run the search and review the best point, stage history, and stopping reason.
+3. Choose **Minimize** or **Maximize**, then run the search. Review the best
+   point, stage history, and stopping reason.
    Use **Download run data** to save the settings and results as JSON.
 
-To search for a maximum, minimize the negated formula. Keep the returned
-coordinates and reverse the sign of the score.
+Enter the original formula in either mode. The dashboard and JSON export
+show scores in the original formula's units.
 
 The parser accepts arithmetic, parentheses, and `sin`, `cos`, `tan`, `exp`,
 `sqrt`, `log`, and `abs`. It recognizes the constants `pi` and `e`. Bounds
@@ -119,6 +120,7 @@ Send this JSON to `POST /optimize` on the backend at
 {
   "objective": "(x1-3)**2 + (x2-0.5)**2",
   "dimensions": 2,
+  "direction": "minimize",
   "bounds": [[-5, 5], [-5, 5]],
   "max_stages": 5,
   "max_evaluations": 4000,
@@ -186,6 +188,25 @@ independent-pair search, three local runs with seeds 7, 41, and 87 finished
 10 stages within a 100,000-call cap. Their errors ranged from `1.78e-15` to
 `2.13e-14`. This follow-up used a larger budget and tested an objective
 that splits into independent pairs.
+
+### Equal-time check
+
+Both modes used a 10-second limit and a 100,000-call cap at 100D. Lower error
+is better. The known minimum for both objectives is zero.
+
+| Objective | Seeds | Median error with pair detection | Median error without it |
+| --- | ---: | ---: | ---: |
+| Shifted, pairwise-rotated Rastrigin | 3 | `1.78e-14` | `49.75` |
+| Fully coupled quadratic | 1 | `2.80e-26` | `2.80e-26` |
+
+The Rastrigin errors with pair detection ranged from `1.07e-14` to `1.99`.
+The quadratic is a control: both settings used the general optimizer.
+These are local timings from a small set of runs. Two-variable component
+calls cost less than full-objective calls. The CSV records both counts.
+
+```sh
+python pair_detection_study.py --output study-results/pair-detection.csv
+```
 
 ## License
 

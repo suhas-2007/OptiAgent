@@ -388,12 +388,18 @@ def optimize():
         if not math.isfinite(time_limit) or not 0 < time_limit <= 90:
             raise ValueError("'time_limit_seconds' must be greater than 0 and at most 90.")
 
+        direction = data.get("direction", "minimize")
+        if direction not in ("minimize", "maximize"):
+            raise ValueError("'direction' must be minimize or maximize.")
+        maximizing = direction == "maximize"
+        search_objective = SafeFunction(f"-({expression})") if maximizing else objective_function
+
         # agent
 
         agent = OptimizationAgent(
 
             objective_function=(
-                objective_function
+                search_objective
             ),
 
             dimensions=(
@@ -405,7 +411,7 @@ def optimize():
             ),
 
             expression=(
-                expression
+                search_objective.expression if maximizing else expression
             ),
 
             max_stages=max_stages,
@@ -421,6 +427,14 @@ def optimize():
         # run optimization
 
         result = agent.optimize()
+        if maximizing:
+            result["best_score"] = -result["best_score"]
+            for point in result["convergence_history"]:
+                point["score"] = -point["score"]
+            for stage in result["stage_history"]:
+                for key in ("stage_best_score", "verified_score", "global_best_score"):
+                    if stage[key] is not None:
+                        stage[key] = -stage[key]
         # convert numpy values
 
         best_position = result.get(
@@ -458,6 +472,7 @@ def optimize():
         return jsonify(
             {
                 "success": True,
+                "direction": direction,
 
                 "objective": (
                     expression

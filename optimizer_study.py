@@ -30,6 +30,11 @@ TARGET = 1e-6
 
 
 def problem(name, dimensions):
+    if name == 'coupled_quadratic':
+        terms = [f'(x{i}-0.3)' for i in range(1, dimensions + 1)]
+        squares = ' + '.join(f'{term}**2' for term in terms)
+        coupling = ' + '.join(terms)
+        return f'{squares} + ({coupling})**2', [[-5, 5]] * dimensions
     if name != 'rotated_rastrigin':
         preset = build_benchmark(name, dimensions)
         return preset['objective'], preset['bounds']
@@ -84,6 +89,7 @@ def run(name, dimensions, seed, method, budget, time_limit, stages, patience):
                 objective_calls=context.objective_evaluations, component_calls=context.component_evaluations,
                 total_calls=context.evaluations, seconds=round(elapsed, 6), termination=termination,
                 stages=stage_count, restarts=restarts, restart_samples=samples,
+                strategy=agent.current_strategy if method.startswith('adaptive_') else method,
                 python=platform.python_version(), numpy=np.__version__, scipy=scipy.__version__)
 
 

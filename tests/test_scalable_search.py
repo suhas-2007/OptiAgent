@@ -177,3 +177,23 @@ def test_shifted_rotated_pairs_at_100_dimensions():
 def test_block_detection_rejects_overlapping_pairs():
     objective = SafeFunction('(x1+x2)**2 + (x2-x3)**2')
     assert additive_components(objective, 3, pairs=True) is None
+
+
+def test_maximize_reports_original_scores():
+    expression = '4 - (x1 - 2)**2 - (x2 + 1)**2'
+    payload = dict(objective=expression, dimensions=2, bounds=[[-5, 5]] * 2,
+                   max_evaluations=1000, random_seed=7, planner_mode='local')
+    with app.test_client() as client:
+        response = client.post('/optimize', json=dict(payload, direction='maximize'))
+        assert response.status_code == 200
+        result = response.get_json()
+        assert result['direction'] == 'maximize'
+        assert result['objective'] == expression
+        assert result['best_position'] == pytest.approx([2, -1], abs=1e-6)
+        assert result['best_score'] == pytest.approx(4)
+        assert result['stage_history'][-1]['verified_score'] == pytest.approx(4)
+        scores = [point['score'] for point in result['convergence_history']]
+        assert scores == sorted(scores)
+        assert scores[-1] == pytest.approx(4)
+        assert client.post('/optimize', json=payload).get_json()['direction'] == 'minimize'
+        assert client.post('/optimize', json=dict(payload, direction='invalid')).status_code == 400
